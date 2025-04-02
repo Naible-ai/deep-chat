@@ -155,14 +155,11 @@ function Components() {
     <div id="customize-content">
       <DeepChatBrowser
         demo={true}
-        initialMessages={[
+        history={[
           {text: 'Hey, how are you?', role: 'user'},
-          {text: 'I am doing great, how about you?', role: 'ai'},
+          {text: 'I am doing great, thanks.', role: 'ai'},
           {text: 'What is the meaning of life?', role: 'user'},
-          {
-            text: 'This completely depends on the person.',
-            role: 'ai',
-          },
+          {text: 'Seeking fulfillment and personal growth.', role: 'ai'},
         ]}
         style={{
           borderRadius: '10px',
@@ -173,14 +170,11 @@ function Components() {
       ></DeepChatBrowser>
       <DeepChatBrowser
         demo={true}
-        initialMessages={[
+        history={[
           {text: 'Hey, how are you?', role: 'user'},
-          {text: 'I am doing great, how about you?', role: 'ai'},
+          {text: 'I am doing great, thanks.', role: 'ai'},
           {text: 'What is the meaning of life?', role: 'user'},
-          {
-            text: 'This completely depends on the person.',
-            role: 'ai',
-          },
+          {text: 'Seeking fulfillment and personal growth.', role: 'ai'},
         ]}
         style={{
           borderRadius: '10px',
@@ -201,7 +195,7 @@ function Components() {
             },
           },
         }}
-        stream={true}
+        connect={{stream: true}}
         avatars={{default: {styles: {position: 'left'}}}}
         submitButtonStyles={{
           submit: {
@@ -257,7 +251,7 @@ function Components() {
       ></DeepChatBrowser>
       <DeepChatBrowser
         demo={true}
-        stream={true}
+        connect={{stream: true}}
         style={{
           borderRadius: '10px',
           boxShadow: '0 .5rem 1rem 0 rgba(44, 51, 73, .1)',
@@ -360,7 +354,7 @@ function Components() {
             },
           },
         }}
-        initialMessages={[
+        history={[
           {files: [{src: '/img/bird.jpeg', type: 'image'}], role: 'ai'},
           {files: [{src: '/audio/cantinaBand.wav', type: 'audio'}], role: 'ai'},
           {text: '```java\nconsole.log("hello world");\n```', role: 'ai'},

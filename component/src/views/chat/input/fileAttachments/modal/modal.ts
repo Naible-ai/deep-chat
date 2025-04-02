@@ -1,4 +1,5 @@
 import {KEYBOARD_KEY} from '../../../../../utils/buttons/keyboardKeys';
+import {ButtonAccessibility} from '../../buttons/buttonAccessility';
 import {SVGIconUtils} from '../../../../../utils/svg/svgIconUtils';
 import {FileServiceIO} from '../../../../../services/serviceIO';
 import {CustomStyle} from '../../../../../types/styles';
@@ -11,6 +12,7 @@ export class Modal {
   private readonly _buttonPanel: HTMLElement;
   private _isOpen = false;
   extensionCloseCallback?: () => void;
+  private keyDownEvent?: (event: KeyboardEvent) => void;
 
   constructor(viewContainerElement: HTMLElement, contentClasses: string[], containerStyle?: CustomStyle) {
     this._contentRef = Modal.createModalContent(contentClasses, containerStyle?.backgroundColor);
@@ -20,7 +22,7 @@ export class Modal {
     viewContainerElement.appendChild(this._elementRef);
     this._backgroundPanelRef = Modal.createDarkBackgroundPanel();
     viewContainerElement.appendChild(this._backgroundPanelRef);
-    this.addWindowEvents();
+    this.addWindowEvents(viewContainerElement);
   }
 
   isOpen() {
@@ -58,8 +60,11 @@ export class Modal {
     return backgroundPanel;
   }
 
-  addButtons(...buttons: HTMLElement[]) {
-    buttons.forEach((button) => this._buttonPanel.appendChild(button));
+  public addButtons(...buttons: HTMLElement[]) {
+    buttons.forEach((button) => {
+      ButtonAccessibility.addAttributes(button);
+      this._buttonPanel.appendChild(button);
+    });
   }
 
   private static createTextButton(text: string) {
@@ -126,17 +131,22 @@ export class Modal {
     return undefined;
   }
 
-  private addWindowEvents() {
-    window.addEventListener('keydown', (event) => {
-      if (this._isOpen) {
-        if (event.key === KEYBOARD_KEY.ESCAPE) {
-          this.close();
-          this.extensionCloseCallback?.();
-        } else if (event.key === KEYBOARD_KEY.ENTER) {
-          this.close();
-          this.extensionCloseCallback?.();
-        }
+  private addWindowEvents(viewContainerElement: HTMLElement) {
+    this.keyDownEvent = this.windowKeyDown.bind(this, viewContainerElement);
+    window.addEventListener('keydown', this.keyDownEvent);
+  }
+
+  private windowKeyDown(viewContainerElement: HTMLElement, event: KeyboardEvent) {
+    if (!viewContainerElement.isConnected && this.keyDownEvent) {
+      window.removeEventListener('keydown', this.keyDownEvent);
+    } else if (this._isOpen) {
+      if (event.key === KEYBOARD_KEY.ESCAPE) {
+        this.close();
+        this.extensionCloseCallback?.();
+      } else if (event.key === KEYBOARD_KEY.ENTER) {
+        this.close();
+        this.extensionCloseCallback?.();
       }
-    });
+    }
   }
 }

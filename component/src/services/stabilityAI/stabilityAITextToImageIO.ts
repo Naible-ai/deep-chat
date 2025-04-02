@@ -11,7 +11,7 @@ import {Response} from '../../types/response';
 import {DeepChat} from '../../deepChat';
 
 export class StabilityAITextToImageIO extends StabilityAIIO {
-  url = 'https://api.stability.ai/v1/generation/stable-diffusion-v1-5/text-to-image';
+  url = 'https://api.stability.ai/v1/generation/stable-diffusion-v1-6/text-to-image';
   private readonly _imageWeight: number | undefined;
   textInputPlaceholderText = 'Describe an image';
   introPanelMarkUp = `
@@ -51,7 +51,7 @@ export class StabilityAITextToImageIO extends StabilityAIIO {
   }
 
   override async callServiceAPI(messages: Messages, pMessages: MessageContentI[]) {
-    if (!this.requestSettings) throw new Error('Request settings have not been set up');
+    if (!this.connectSettings) throw new Error('Request settings have not been set up');
     const body = this.preprocessBody(this.rawBody, pMessages[pMessages.length - 1].text);
     HTTPRequest.request(this, body, messages);
   }

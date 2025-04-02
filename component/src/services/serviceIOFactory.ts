@@ -11,8 +11,11 @@ import {StabilityAIImageToImageIO} from './stabilityAI/stabilityAIImageToImageIO
 import {HuggingFaceTranslationIO} from './huggingFace/huggingFaceTranslationIO';
 import {StabilityAITextToImageIO} from './stabilityAI/stabilityAITextToImageIO';
 import {HuggingFaceFillMaskIO} from './huggingFace/huggingFaceFillMaskIO';
+import {OpenAIAssistantIO} from './openAI/assistant/openAIAssistantIO';
 import {CohereTextGenerationIO} from './cohere/cohereTextGenerationIO';
+import {AzureOpenAIAssistantIO} from './azure/azureOpenAIAssistantIO';
 import {CohereSummarizationIO} from './cohere/cohereSummarizationIO';
+import {OpenAIRealtimeIO} from './openAI/realtime/openAIRealtimeIO';
 import {OpenAITextToSpeechIO} from './openAI/openAITextToSpeechIO';
 import {OpenAISpeechToTextIO} from './openAI/openAISpeechToTextIO';
 import {AzureSummarizationIO} from './azure/azureSummarizationIO';
@@ -20,20 +23,22 @@ import {AssemblyAIAudioIO} from './assemblyAI/assemblyAIAudioIO';
 import {AzureTextToSpeechIO} from './azure/azureTextToSpeechIO';
 import {AzureSpeechToTextIO} from './azure/azureSpeechToTextIO';
 import {AzureTranslationIO} from './azure/azureTranslationIO';
-import {OpenAIAssistantIO} from './openAI/openAIAssistantIO';
+import {AzureOpenAIChatIO} from './azure/azureOpenAIChatIO';
 import {OpenAIImagesIO} from './openAI/openAIImagesIO';
 import {BaseServiceIO} from './utils/baseServiceIO';
 import {OpenAIChatIO} from './openAI/openAIChatIO';
 import {CohereChatIO} from './cohere/cohereChatIO';
 import {WebModel} from '../webModel/webModel';
+import {MistralIO} from './mistral/mistralO';
 import {ServiceIO} from './serviceIO';
 import {DeepChat} from '../deepChat';
 
 // exercise caution when defining default returns for directConnection as their configs can be undefined
 export class ServiceIOFactory {
+  // this should only be called when no _activeService is set or is demo as otherwise we don't want to reconnect
   public static create(deepChat: DeepChat): ServiceIO {
-    const {directConnection, request, demo, _webModel} = deepChat;
-    if (_webModel) {
+    const {directConnection, connect, demo, webModel} = deepChat;
+    if (webModel) {
       return new WebModel(deepChat);
     }
     if (directConnection) {
@@ -50,20 +55,22 @@ export class ServiceIOFactory {
         if (directConnection.openAI.assistant) {
           return new OpenAIAssistantIO(deepChat);
         }
+        if (directConnection.openAI.realtime) {
+          return new OpenAIRealtimeIO(deepChat);
+        }
         return new OpenAIChatIO(deepChat);
       }
       if (directConnection.assemblyAI) {
         return new AssemblyAIAudioIO(deepChat);
       }
-      // WORK - update chat to be the default
       if (directConnection.cohere) {
-        if (directConnection.cohere.chat) {
-          return new CohereChatIO(deepChat);
+        if (directConnection.cohere.textGeneration) {
+          return new CohereTextGenerationIO(deepChat);
         }
         if (directConnection.cohere.summarization) {
           return new CohereSummarizationIO(deepChat);
         }
-        return new CohereTextGenerationIO(deepChat);
+        return new CohereChatIO(deepChat);
       }
       if (directConnection.huggingFace) {
         if (directConnection.huggingFace.textGeneration) {
@@ -93,6 +100,14 @@ export class ServiceIOFactory {
         return new HuggingFaceConversationIO(deepChat);
       }
       if (directConnection.azure) {
+        if (directConnection.azure.openAI) {
+          if (directConnection.azure.openAI.chat) {
+            return new AzureOpenAIChatIO(deepChat);
+          }
+          if (directConnection.azure.openAI.assistant) {
+            return new AzureOpenAIAssistantIO(deepChat);
+          }
+        }
         if (directConnection.azure.speechToText) {
           return new AzureSpeechToTextIO(deepChat);
         }
@@ -118,11 +133,14 @@ export class ServiceIOFactory {
         }
         return new StabilityAITextToImageIO(deepChat);
       }
+      if (directConnection.mistral) {
+        return new MistralIO(deepChat);
+      }
     }
-    if (request) {
+    if (connect && Object.keys(connect).length > 0 && !demo) {
       return new BaseServiceIO(deepChat);
     }
-    // when directConnection and request are not defined, we default to demo
+    // when not directConnection and connect connection, we default to demo
     return new BaseServiceIO(deepChat, undefined, demo || true);
   }
 }

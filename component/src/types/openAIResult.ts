@@ -4,14 +4,38 @@ import {InterfacesUnion} from './utilityTypes';
 // https://platform.openai.com/docs/api-reference/messages/createMessage
 // or when creating and running together
 // https://platform.openai.com/docs/api-reference/runs/createThreadAndRun
-export interface OpenAIAssistantInitReqResult {
+export type OpenAIAssistantInitReqResult = OpenAIRunResult & {
   id: string; // run id
-  thread_id: string;
   error?: {code: string; message: string};
+  // this is used exclusively for streams
+  delta?: {
+    content?: OpenAIAssistantContent[];
+    step_details?: {
+      tool_calls?: ToolCalls;
+    };
+  };
+  // this is used exclusively for streams
+  file_ids?: string[];
+  content?: OpenAIAssistantContent[];
+};
+
+export interface OpenAINewAssistantResult {
+  id: string;
+}
+
+export interface OpenAIAssistantContent {
+  image_file?: {file_id: string};
+  text?: {value: string; annotations?: {text?: string; file_path?: {file_id?: string}}[]};
+}
+
+export interface OpenAIAssistantData {
+  // https://platform.openai.com/docs/api-reference/messages/object
+  content: OpenAIAssistantContent[];
+  role: string;
 }
 
 export interface OpenAIAssistantMessagesResult {
-  data: {content: {text: {value: string}}[]}[];
+  data: OpenAIAssistantData[];
 }
 
 export interface OpenAIRunResult {
@@ -42,7 +66,9 @@ export type OpenAITextToSpeechResult = Blob | {error?: {code: string; message: s
 // text for completion request & stream
 // message for chat completion request
 // delta for chat completion stream
-type ResultChoice = InterfacesUnion<{text: string} | {message: OpenAIMessage} | {delta: OpenAIMessage}>;
+export type ResultChoice = InterfacesUnion<
+  {text: string} | {message: OpenAIMessage} | {delta: OpenAIMessage; finish_reason?: string}
+>;
 
 export interface OpenAIConverseResult {
   choices: ResultChoice[];

@@ -24,14 +24,11 @@ import Tabs from '@theme/Tabs';
 <ComponentContainer>
   <DeepChatBrowser
     demo={true}
-    initialMessages={[
+    history={[
       {text: 'Hey, how are you?', role: 'user'},
-      {text: 'I am doing great, how about you?', role: 'ai'},
+      {text: 'I am doing great, thanks.', role: 'ai'},
       {text: 'What is the meaning of life?', role: 'user'},
-      {
-        text: 'This completely depends on the person.',
-        role: 'ai',
-      },
+      {text: 'Seeking fulfillment and personal growth.', role: 'ai'},
     ]}
     style={{borderRadius: '10px'}}
     messageStyles={{
@@ -47,7 +44,7 @@ import Tabs from '@theme/Tabs';
         },
       },
     }}
-    stream={true}
+    connect={{stream: true}}
     avatars={{
       default: {styles: {position: 'left'}},
       ai: {
@@ -91,6 +88,8 @@ import Tabs from '@theme/Tabs';
           default: {backgroundColor: 'white'},
         },
         svg: {
+          content:
+            '<?xml version="1.0" encoding="utf-8"?> <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M21.66,12a2,2,0,0,1-1.14,1.81L5.87,20.75A2.08,2.08,0,0,1,5,21a2,2,0,0,1-1.82-2.82L5.46,13H11a1,1,0,0,0,0-2H5.46L3.18,5.87A2,2,0,0,1,5.86,3.25h0l14.65,6.94A2,2,0,0,1,21.66,12Z"> </path> </svg>',
           styles: {
             default: {
               filter:
@@ -194,14 +193,14 @@ import Tabs from '@theme/Tabs';
     }
   }'
   textInput='{"placeholder": {"text": "Send a message"}}'
-  initialMessages='[
+  history='[
     {"text": "Hey, how are you?", "role": "user"},
-    {"text": "I am doing great, how about you?", "role": "ai"},
+    {"text": "I am doing great, thanks.", "role": "ai"},
     {"text": "What is the meaning of life?", "role": "user"},
-    {"text": "This completely depends on the person.", "role": "ai"}
+    {"text": "Seeking fulfillment and personal growth.", "role": "ai"}
   ]'
   demo="true"
-  stream="true"
+  connect='{"stream": true}'
 ></deep-chat>
 ```
 
@@ -217,16 +216,13 @@ set the [`avatars`](/docs/messages#avatars) property to _true_.
 
 <ComponentContainer>
   <DeepChatBrowser
-    stream={true}
+    connect={{stream: true}}
     demo={true}
-    initialMessages={[
+    history={[
       {text: 'Hey, how are you?', role: 'user'},
-      {text: 'I am doing great, how about you?', role: 'ai'},
+      {text: 'I am doing great, thanks.', role: 'ai'},
       {text: 'What is the meaning of life?', role: 'user'},
-      {
-        text: 'This completely depends on the person.',
-        role: 'ai',
-      },
+      {text: 'Seeking fulfillment and personal growth.', role: 'ai'},
     ]}
     style={{
       borderRadius: '10px',
@@ -270,7 +266,7 @@ set the [`avatars`](/docs/messages#avatars) property to _true_.
       position: 'outside-right',
       submit: {
         container: {
-          default: {bottom: '0.75em', borderRadius: '25px', padding: '5px', backgroundColor: '#f3f6fc'},
+          default: {bottom: '0.9em', borderRadius: '25px', padding: '6px 5px 4px', backgroundColor: '#f3f6fc'},
           hover: {backgroundColor: '#b0deff4f'},
           click: {backgroundColor: '#b0deffb5'},
         },
@@ -288,6 +284,8 @@ set the [`avatars`](/docs/messages#avatars) property to _true_.
       },
       loading: {
         svg: {
+          content:
+            '<?xml version="1.0" encoding="utf-8"?> <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m21.426 11.095-17-8A.999.999 0 0 0 3.03 4.242L4.969 12 3.03 19.758a.998.998 0 0 0 1.396 1.147l17-8a1 1 0 0 0 0-1.81zM5.481 18.197l.839-3.357L12 12 6.32 9.16l-.839-3.357L18.651 12l-13.17 6.197z"/></svg>',
           styles: {
             default: {
               filter:
@@ -301,6 +299,8 @@ set the [`avatars`](/docs/messages#avatars) property to _true_.
           hover: {backgroundColor: '#ededed'},
         },
         svg: {
+          content:
+            '<?xml version="1.0" encoding="utf-8"?> <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m21.426 11.095-17-8A.999.999 0 0 0 3.03 4.242L4.969 12 3.03 19.758a.998.998 0 0 0 1.396 1.147l17-8a1 1 0 0 0 0-1.81zM5.481 18.197l.839-3.357L12 12 6.32 9.16l-.839-3.357L18.651 12l-13.17 6.197z"/></svg>',
           styles: {
             default: {
               filter:
@@ -354,7 +354,7 @@ set the [`avatars`](/docs/messages#avatars) property to _true_.
     "position": "outside-right",
     "submit": {
       "container": {
-        "default": {"bottom": "0.75em", "borderRadius": "25px", "padding": "5px", "backgroundColor": "#f3f6fc"},
+        "default": {"bottom": "0.9em", "borderRadius": "25px", "padding": "6px 5px 4px", "backgroundColor": "#f3f6fc"},
         "hover": {"backgroundColor": "#b0deff4f"},
         "click": {"backgroundColor": "#b0deffb5"}
       },
@@ -388,14 +388,14 @@ set the [`avatars`](/docs/messages#avatars) property to _true_.
       }
     }
   }'
-  initialMessages='[
+  history='[
     {"text": "Hey, how are you?", "role": "user"},
-    {"text": "I am doing great, how about you?", "role": "ai"},
+    {"text": "I am doing great, thanks.", "role": "ai"},
     {"text": "What is the meaning of life?", "role": "user"},
-    {"text": "This completely depends on the person.", "role": "ai"}
+    {"text": "Seeking fulfillment and personal growth.", "role": "ai"}
   ]'
   demo="true"
-  stream="true"
+  connect='{"stream": true}'
 ></deep-chat>
 ```
 
@@ -410,16 +410,13 @@ Simulation of the styling used in [Bing Chat](https://www.bing.com/search?q=Bing
 
 <ComponentContainer>
   <DeepChatBrowser
-    stream={true}
+    connect={{stream: true}}
     demo={true}
-    initialMessages={[
+    history={[
       {text: 'Hey, how are you?', role: 'user'},
-      {text: 'I am doing great, how about you?', role: 'ai'},
+      {text: 'I am doing great, thanks.', role: 'ai'},
       {text: 'What is the meaning of life?', role: 'user'},
-      {
-        text: 'This completely depends on the person.',
-        role: 'ai',
-      },
+      {text: 'Seeking fulfillment and personal growth.', role: 'ai'},
     ]}
     style={{
       borderRadius: '10px',
@@ -462,7 +459,7 @@ Simulation of the styling used in [Bing Chat](https://www.bing.com/search?q=Bing
       button: {
         default: {
           container: {default: {bottom: '1em', right: '0.6em', borderRadius: '20px', width: '1.9em', height: '1.9em'}},
-          svg: {styles: {default: {bottom: '0.4em', left: '0.3em'}}},
+          svg: {styles: {default: {bottom: '0.35em', left: '0.35em'}}},
         },
         position: 'inside-right',
       },
@@ -471,7 +468,7 @@ Simulation of the styling used in [Bing Chat](https://www.bing.com/search?q=Bing
       position: 'outside-right',
       submit: {
         container: {
-          default: {bottom: '0.75em', borderRadius: '25px', padding: '5px', backgroundColor: 'unset'},
+          default: {bottom: '0.8em', borderRadius: '25px', padding: '6px 5px 4px', backgroundColor: 'unset'},
           hover: {backgroundColor: '#b0deff4f'},
           click: {backgroundColor: '#b0deffb5'},
         },
@@ -489,6 +486,8 @@ Simulation of the styling used in [Bing Chat](https://www.bing.com/search?q=Bing
       },
       loading: {
         svg: {
+          content:
+            '<?xml version="1.0" encoding="utf-8"?> <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m21.426 11.095-17-8A.999.999 0 0 0 3.03 4.242L4.969 12 3.03 19.758a.998.998 0 0 0 1.396 1.147l17-8a1 1 0 0 0 0-1.81zM5.481 18.197l.839-3.357L12 12 6.32 9.16l-.839-3.357L18.651 12l-13.17 6.197z"/></svg>',
           styles: {
             default: {
               filter:
@@ -502,6 +501,8 @@ Simulation of the styling used in [Bing Chat](https://www.bing.com/search?q=Bing
           hover: {backgroundColor: '#ededed94'},
         },
         svg: {
+          content:
+            '<?xml version="1.0" encoding="utf-8"?> <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m21.426 11.095-17-8A.999.999 0 0 0 3.03 4.242L4.969 12 3.03 19.758a.998.998 0 0 0 1.396 1.147l17-8a1 1 0 0 0 0-1.81zM5.481 18.197l.839-3.357L12 12 6.32 9.16l-.839-3.357L18.651 12l-13.17 6.197z"/></svg>',
           styles: {
             default: {
               filter:
@@ -557,7 +558,7 @@ Simulation of the styling used in [Bing Chat](https://www.bing.com/search?q=Bing
     "button": {
       "default": {
         "container": {"default": {"bottom": "1em", "right": "0.6em", "borderRadius": "20px", "width": "1.9em", "height": "1.9em"}},
-        "svg": {"styles": {"default": {"bottom": "0.4em", "left": "0.3em"}}}
+        "svg": {"styles": {"default": {"bottom": "0.35em", "left": "0.35em"}}}
       },
       "position": "inside-right"
     }
@@ -566,7 +567,7 @@ Simulation of the styling used in [Bing Chat](https://www.bing.com/search?q=Bing
     "position": "outside-right",
     "submit": {
       "container": {
-        "default": {"bottom": "0.75em", "borderRadius": "25px", "padding": "5px", "backgroundColor": "unset"},
+        "default": {"bottom": "0.8em", "borderRadius": "25px", "padding": "6px 5px 4px", "backgroundColor": "unset"},
         "hover": {"backgroundColor": "#b0deff4f"},
         "click": {"backgroundColor": "#b0deffb5"}
       },
@@ -602,14 +603,255 @@ Simulation of the styling used in [Bing Chat](https://www.bing.com/search?q=Bing
       }
     }
   }'
-  initialMessages='[
+  history='[
     {"text": "Hey, how are you?", "role": "user"},
-    {"text": "I am doing great, how about you?", "role": "ai"},
+    {"text": "I am doing great, thanks.", "role": "ai"},
     {"text": "What is the meaning of life?", "role": "user"},
-    {"text": "This completely depends on the person.", "role": "ai"}
+    {"text": "Seeking fulfillment and personal growth.", "role": "ai"}
   ]'
   demo="true"
-  stream="true"
+  connect='{"stream": true}'
+></deep-chat>
+```
+
+</TabItem>
+</CodeToggle>
+
+<LineBreak></LineBreak>
+
+### iMessage {#iMessage}
+
+Chat style that uses the iMessage SMS theme.
+
+<ComponentContainer>
+  <DeepChatBrowser
+    connect={{stream: true}}
+    demo={true}
+    history={[
+      {text: 'Hey, how are you?', role: 'user'},
+      {text: 'I am doing great, thanks.', role: 'ai'},
+      {text: 'What is the meaning of life?', role: 'user'},
+      {text: 'Seeking fulfillment and personal growth.', role: 'ai'},
+    ]}
+    style={{
+      borderRadius: '10px',
+      fontSize: '16px',
+      fontFamily:
+        'system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
+    }}
+    messageStyles={{
+      default: {
+        shared: {
+          bubble: {
+            maxWidth: '75%',
+            borderRadius: '1em',
+            padding: '.42em .7em',
+            fontSize: '15px',
+          },
+        },
+        user: {bubble: {backgroundColor: '#00c82a'}},
+      },
+      loading: {bubble: {padding: '0.6em 0.75em 0.6em 1.3em'}},
+    }}
+    submitButtonStyles={{
+      submit: {
+        container: {
+          default: {
+            width: '0.95em',
+            height: '0.95em',
+            justifyContent: 'center',
+            display: 'flex',
+            borderRadius: '25px',
+            padding: '0.3em',
+            backgroundColor: '#00c82a',
+          },
+        },
+        svg: {
+          content: `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 115.4 122.88">
+              <path d="M24.94,67.88A14.66,14.66,0,0,1,4.38,47L47.83,4.21a14.66,14.66,0,0,1,20.56,0L111,46.15A14.66,14.66,0,0,1,90.46,67.06l-18-17.69-.29,59.17c-.1,19.28-29.42,19-29.33-.25L43.14,50,24.94,67.88Z"/>
+            </svg>`,
+          styles: {
+            default: {
+              filter:
+                'brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%) hue-rotate(315deg) brightness(99%) contrast(102%)',
+              transform: 'scale(0.95)',
+            },
+          },
+        },
+      },
+      loading: {
+        svg: {
+          content: `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 115.4 122.88">
+              <path d="M24.94,67.88A14.66,14.66,0,0,1,4.38,47L47.83,4.21a14.66,14.66,0,0,1,20.56,0L111,46.15A14.66,14.66,0,0,1,90.46,67.06l-18-17.69-.29,59.17c-.1,19.28-29.42,19-29.33-.25L43.14,50,24.94,67.88Z"/>
+            </svg>`,
+        },
+      },
+      stop: {
+        svg: {
+          content: `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 115.4 122.88">
+              <path d="M24.94,67.88A14.66,14.66,0,0,1,4.38,47L47.83,4.21a14.66,14.66,0,0,1,20.56,0L111,46.15A14.66,14.66,0,0,1,90.46,67.06l-18-17.69-.29,59.17c-.1,19.28-29.42,19-29.33-.25L43.14,50,24.94,67.88Z"/>
+            </svg>`,
+        },
+      },
+    }}
+    textInput={{
+      styles: {
+        container: {
+          boxShadow: 'none',
+          borderRadius: '1em',
+          border: '1px solid rgba(0,0,0,0.2)',
+        },
+        text: {
+          padding: '0.4em 0.8em',
+          paddingRight: '2.5em',
+        },
+      },
+    }}
+    images={true}
+    camera={{button: {position: 'dropup-menu'}}}
+    dropupStyles={{
+      button: {
+        styles: {
+          container: {
+            default: {
+              width: '1.6em',
+              height: '1.6em',
+              borderRadius: '25px',
+              backgroundColor: '#8282821a',
+            },
+          },
+          svg: {
+            styles: {
+              default: {
+                width: '1em',
+                left: '5px',
+                top: '0.2em',
+                filter:
+                  'brightness(0) saturate(100%) invert(56%) sepia(0%) saturate(2755%) hue-rotate(104deg) brightness(96%) contrast(93%)',
+              },
+            },
+            content: `<?xml version="1.0" encoding="utf-8"?>
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3,11h8V3a1,1,0,0,1,2,0v8h8a1,1,0,0,1,0,2H13v8a1,1,0,0,1-2,0V13H3a1,1,0,0,1,0-2Z"/>
+              </svg>`,
+          },
+        },
+      },
+    }}
+    attachmentContainerStyle={{
+      backgroundColor: 'rgba(255, 255, 255, 0.6)',
+      borderRadius: '5px 5px 0 0',
+      border: '1px solid rgba(0,0,0,0.2)',
+      top: '-2.6em',
+      height: '4em',
+    }}
+  ></DeepChatBrowser>
+</ComponentContainer>
+
+<CodeToggle>
+<TabItem value="js" label="Show code">
+
+```html
+<!-- This example is for Vanilla JS and should be tailored to your framework (see Frameworks) -->
+
+<deep-chat
+  style="border-radius: 10px; font-size: 16px; font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';"
+  messageStyles='{
+    "default": {
+      "shared": {
+        "bubble": {
+          "maxWidth": "75%",
+          "borderRadius": "1em",
+          "padding": ".42em .7em",
+          "fontSize": "15px"
+        }
+      },
+      "user": {"bubble": {"backgroundColor": "#00c82a"}}
+    },
+    "loading": {"bubble": {"padding": "0.6em 0.75em 0.6em 1.3em"}}
+  }'
+  submitButtonStyles='{
+    "submit": {
+      "container": {
+        "default": {
+          "width": "0.95em",
+          "height": "0.95em",
+          "justifyContent": "center",
+          "display": "flex",
+          "borderRadius": "25px",
+          "padding": "0.3em",
+          "backgroundColor": "#00c82a"
+        }
+      },
+      "svg": {
+        "content": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 115.4 122.88\"><path d=\"M24.94,67.88A14.66,14.66,0,0,1,4.38,47L47.83,4.21a14.66,14.66,0,0,1,20.56,0L111,46.15A14.66,14.66,0,0,1,90.46,67.06l-18-17.69-.29,59.17c-.1,19.28-29.42,19-29.33-.25L43.14,50,24.94,67.88Z\"/></svg>",
+        "styles": {
+          "default": {
+            "filter": "brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%) hue-rotate(315deg) brightness(99%) contrast(102%)",
+            "transform": "scale(0.95)"
+          }
+        }
+      }
+    }
+  }'
+  textInput='{
+    "styles": {
+      "container": {
+        "boxShadow": "none",
+        "borderRadius": "1em",
+        "border": "1px solid rgba(0,0,0,0.2)"
+      },
+      "text": {
+        "padding": "0.4em 0.8em",
+        "paddingRight": "2.5em"
+      }
+    }
+  }'
+  images="true"
+  camera='{"button": {"position": "dropup-menu"}}'
+  dropupStyles='{
+    "button": {
+      "styles": {
+        "container": {
+          "default": {
+            "width": "1.6em",
+            "height": "1.6em",
+            "borderRadius": "25px",
+            "backgroundColor": "#8282821a"
+          }
+        },
+        "svg": {
+          "styles": {
+            "default": {
+              "width": "1em",
+              "left": "5px",
+              "top": "0.2em",
+              "filter": "brightness(0) saturate(100%) invert(56%) sepia(0%) saturate(2755%) hue-rotate(104deg) brightness(96%) contrast(93%)"
+            }
+          },
+          "content": "<?xml version=\"1.0\" encoding=\"utf-8\"?><svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M3,11h8V3a1,1,0,0,1,2,0v8h8a1,1,0,0,1,0,2H13v8a1,1,0,0,1-2,0V13H3a1,1,0,0,1,0-2Z\"/></svg>"
+        }
+      }
+    }
+  }'
+  attachmentContainerStyle='{
+    "backgroundColor": "rgba(255, 255, 255, 0.6)",
+    "borderRadius": "5px 5px 0 0",
+    "border": "1px solid rgba(0,0,0,0.2)",
+    "top": "-2.6em",
+    "height": "4em"
+  }'
+  history='[
+    {"text": "Hey, how are you?", "role": "user"},
+    {"text": "I am doing great, thanks.", "role": "ai"},
+    {"text": "What is the meaning of life?", "role": "user"},
+    {"text": "Seeking fulfillment and personal growth.", "role": "ai"}
+  ]'
+  demo="true"
+  connect='{"stream": true}'
 ></deep-chat>
 ```
 
@@ -624,16 +866,13 @@ A blue color theme that uses a background image.
 
 <ComponentContainer>
   <DeepChatBrowser
-    stream={true}
+    connect={{stream: true}}
     demo={true}
-    initialMessages={[
+    history={[
       {text: 'Hey, how are you?', role: 'user'},
-      {text: 'I am doing great, how about you?', role: 'ai'},
+      {text: 'I am doing great, thanks.', role: 'ai'},
       {text: 'What is the meaning of life?', role: 'user'},
-      {
-        text: 'This completely depends on the person.',
-        role: 'ai',
-      },
+      {text: 'Seeking fulfillment and personal growth.', role: 'ai'},
     ]}
     style={{
       borderRadius: '10px',
@@ -718,14 +957,14 @@ A blue color theme that uses a background image.
     ::-webkit-scrollbar-track {
       background-color: unset;
     }"
-  initialMessages='[
+  history='[
     {"text": "Hey, how are you?", "role": "user"},
-    {"text": "I am doing great, how about you?", "role": "ai"},
+    {"text": "I am doing great, thanks.", "role": "ai"},
     {"text": "What is the meaning of life?", "role": "user"},
-    {"text": "This completely depends on the person.", "role": "ai"}
+    {"text": "Seeking fulfillment and personal growth.", "role": "ai"}
   ]'
   demo="true"
-  stream="true"
+  connect='{"stream": true}'
 ></deep-chat>
 ```
 
@@ -740,16 +979,13 @@ A blue and purple theme that uses an image background.
 
 <ComponentContainer>
   <DeepChatBrowser
-    stream={true}
+    connect={{stream: true}}
     demo={true}
-    initialMessages={[
+    history={[
       {text: 'Hey, how are you?', role: 'user'},
-      {text: 'I am doing great, how about you?', role: 'ai'},
+      {text: 'I am doing great, thanks.', role: 'ai'},
       {text: 'What is the meaning of life?', role: 'user'},
-      {
-        text: 'This completely depends on the person.',
-        role: 'ai',
-      },
+      {text: 'Seeking fulfillment and personal growth.', role: 'ai'},
     ]}
     style={{
       borderRadius: '10px',
@@ -870,14 +1106,14 @@ A blue and purple theme that uses an image background.
     ::-webkit-scrollbar-track {
       background-color: unset;
     }"
-  initialMessages='[
+  history='[
     {"text": "Hey, how are you?", "role": "user"},
-    {"text": "I am doing great, how about you?", "role": "ai"},
+    {"text": "I am doing great, thanks.", "role": "ai"},
     {"text": "What is the meaning of life?", "role": "user"},
-    {"text": "This completely depends on the person.", "role": "ai"}
+    {"text": "Seeking fulfillment and personal growth.", "role": "ai"}
   ]'
   demo="true"
-  stream="true"
+  connect='{"stream": true}'
 ></deep-chat>
 ```
 
@@ -893,16 +1129,13 @@ set the [`avatars`](/docs/messages#avatars) property to _true_.
 
 <ComponentContainer>
   <DeepChatBrowser
-    stream={true}
+    connect={{stream: true}}
     demo={true}
-    initialMessages={[
+    history={[
       {text: 'Hey, how are you?', role: 'user'},
-      {text: 'I am doing great, how about you?', role: 'ai'},
+      {text: 'I am doing great, thanks.', role: 'ai'},
       {text: 'What is the meaning of life?', role: 'user'},
-      {
-        text: 'This completely depends on the person.',
-        role: 'ai',
-      },
+      {text: 'Seeking fulfillment and personal growth.', role: 'ai'},
     ]}
     style={{borderRadius: '10px'}}
     messageStyles={{default: {user: {bubble: {backgroundColor: '#ff2020'}}}}}
@@ -968,14 +1201,14 @@ set the [`avatars`](/docs/messages#avatars) property to _true_.
     ::-webkit-scrollbar-thumb {
       background-color: red;
     }"
-  initialMessages='[
+  history='[
     {"text": "Hey, how are you?", "role": "user"},
-    {"text": "I am doing great, how about you?", "role": "ai"},
+    {"text": "I am doing great, thanks.", "role": "ai"},
     {"text": "What is the meaning of life?", "role": "user"},
-    {"text": "This completely depends on the person.", "role": "ai"}
+    {"text": "Seeking fulfillment and personal growth.", "role": "ai"}
   ]'
   demo="true"
-  stream="true"
+  connect='{"stream": true}'
 ></deep-chat>
 ```
 
@@ -990,16 +1223,13 @@ A violet color theme that uses a squared border styling approach.
 
 <ComponentContainer>
   <DeepChatBrowser
-    stream={true}
+    connect={{stream: true}}
     demo={true}
-    initialMessages={[
+    history={[
       {text: 'Hey, how are you?', role: 'user'},
-      {text: 'I am doing great, how about you?', role: 'ai'},
+      {text: 'I am doing great, thanks.', role: 'ai'},
       {text: 'What is the meaning of life?', role: 'user'},
-      {
-        text: 'This completely depends on the person.',
-        role: 'ai',
-      },
+      {text: 'Seeking fulfillment and personal growth.', role: 'ai'},
     ]}
     style={{borderRadius: '10px'}}
     messageStyles={{default: {shared: {bubble: {borderRadius: '0px'}}, user: {bubble: {backgroundColor: '#6c00ff'}}}}}
@@ -1024,6 +1254,9 @@ A violet color theme that uses a squared border styling approach.
       loading: {
         container: {
           default: {backgroundColor: '#afafaf'},
+        },
+        text: {
+          content: 'Wait',
         },
       },
       stop: {
@@ -1121,14 +1354,14 @@ A violet color theme that uses a squared border styling approach.
     ::-webkit-scrollbar-thumb {
       background-color: #5900ff;
   }"
-  initialMessages='[
+  history='[
     {"text": "Hey, how are you?", "role": "user"},
-    {"text": "I am doing great, how about you?", "role": "ai"},
+    {"text": "I am doing great, thanks.", "role": "ai"},
     {"text": "What is the meaning of life?", "role": "user"},
-    {"text": "This completely depends on the person.", "role": "ai"}
+    {"text": "Seeking fulfillment and personal growth.", "role": "ai"}
   ]'
   demo="true"
-  stream="true"
+  connect='{"stream": true}'
 ></deep-chat>
 ```
 
@@ -1143,16 +1376,13 @@ Dark blue color variation that is suitable for a dark screen mode.
 
 <ComponentContainer>
   <DeepChatBrowser
-    stream={true}
+    connect={{stream: true}}
     demo={true}
-    initialMessages={[
+    history={[
       {text: 'Hey, how are you?', role: 'user'},
-      {text: 'I am doing great, how about you?', role: 'ai'},
+      {text: 'I am doing great, thanks.', role: 'ai'},
       {text: 'What is the meaning of life?', role: 'user'},
-      {
-        text: 'This completely depends on the person.',
-        role: 'ai',
-      },
+      {text: 'Seeking fulfillment and personal growth.', role: 'ai'},
     ]}
     style={{
       borderRadius: '10px',
@@ -1264,14 +1494,14 @@ Dark blue color variation that is suitable for a dark screen mode.
     ::-webkit-scrollbar-track {
       background-color: unset;
     }"
-  initialMessages='[
+  history='[
     {"text": "Hey, how are you?", "role": "user"},
-    {"text": "I am doing great, how about you?", "role": "ai"},
+    {"text": "I am doing great, thanks.", "role": "ai"},
     {"text": "What is the meaning of life?", "role": "user"},
-    {"text": "This completely depends on the person.", "role": "ai"}
+    {"text": "Seeking fulfillment and personal growth.", "role": "ai"}
   ]'
   demo="true"
-  stream="true"
+  connect='{"stream": true}'
 ></deep-chat>
 ```
 
@@ -1286,16 +1516,13 @@ Dark orange color variation that is suitable for a dark screen mode.
 
 <ComponentContainer>
   <DeepChatBrowser
-    stream={true}
+    connect={{stream: true}}
     demo={true}
-    initialMessages={[
+    history={[
       {text: 'Hey, how are you?', role: 'user'},
-      {text: 'I am doing great, how about you?', role: 'ai'},
+      {text: 'I am doing great, thanks.', role: 'ai'},
       {text: 'What is the meaning of life?', role: 'user'},
-      {
-        text: 'This completely depends on the person.',
-        role: 'ai',
-      },
+      {text: 'Seeking fulfillment and personal growth.', role: 'ai'},
     ]}
     style={{
       borderRadius: '10px',
@@ -1426,14 +1653,110 @@ Dark orange color variation that is suitable for a dark screen mode.
     ::-webkit-scrollbar-track {
       background-color: unset;
     }"
-  initialMessages='[
+  history='[
     {"text": "Hey, how are you?", "role": "user"},
-    {"text": "I am doing great, how about you?", "role": "ai"},
+    {"text": "I am doing great, thanks.", "role": "ai"},
     {"text": "What is the meaning of life?", "role": "user"},
-    {"text": "This completely depends on the person.", "role": "ai"}
+    {"text": "Seeking fulfillment and personal growth.", "role": "ai"}
   ]'
   demo="true"
-  stream="true"
+  connect='{"stream": true}'
+></deep-chat>
+```
+
+</TabItem>
+</CodeToggle>
+
+<LineBreak></LineBreak>
+
+### Grouped messages {#groupedMessages}
+
+Messages are grouped by the role their role. The styling is set via the `deep-chat-top-message`, `deep-chat-middle-message` and `deep-chat-bottom-message` classes
+using the [`auxiliaryStyle`](/docs/styles#auxiliaryStyle) property.
+
+<ComponentContainer>
+  <DeepChatBrowser
+    demo={true}
+    history={[
+      {text: 'Group 1', role: 'group1'},
+      {text: 'Group 2', role: 'group2'},
+      {text: 'Group 2', role: 'group2'},
+      {text: 'Group 2', role: 'group2'},
+      {text: 'Group 3', role: 'group3'},
+      {text: 'Group 3', role: 'group3'},
+    ]}
+    messageStyles={{
+      default: {
+        shared: {
+          bubble: {
+            borderRadius: '0px',
+          },
+        },
+      },
+    }}
+    auxiliaryStyle="
+      .deep-chat-top-message .message-bubble {
+          border-top-left-radius: 5px !important;
+          border-top-right-radius: 5px !important;
+      }
+      .deep-chat-middle-message .message-bubble {
+          margin-top: 0px;
+      }
+      .deep-chat-bottom-message .message-bubble {
+          margin-top: 0px;
+          border-bottom-left-radius: 5px !important;
+          border-bottom-right-radius: 5px !important;
+      }
+      .deep-chat-top-message.deep-chat-bottom-message .message-bubble {
+        margin-top: 10px;
+      }
+    "
+
+> </DeepChatBrowser>
+
+</ComponentContainer>
+
+<CodeToggle>
+<TabItem value="js" label="Show code">
+
+```html
+<!-- This example is for Vanilla JS and should be tailored to your framework (see Frameworks) -->
+
+<deep-chat
+  auxiliaryStyle="
+    .deep-chat-top-message .message-bubble {
+        border-top-left-radius: 5px !important;
+        border-top-right-radius: 5px !important;
+    }
+    .deep-chat-middle-message .message-bubble {
+        margin-top: 0px;
+    }
+    .deep-chat-bottom-message .message-bubble {
+        margin-top: 0px;
+        border-bottom-left-radius: 5px !important;
+        border-bottom-right-radius: 5px !important;
+    }
+    .deep-chat-top-message.deep-chat-bottom-message .message-bubble {
+      margin-top: 10px;
+    }"
+  messageStyles='{
+    "default": {
+      "shared": {
+        "bubble": {
+          "borderRadius": "0px"
+        }
+      }
+    }
+  }'
+  history='[
+      {"text": "Group 1", "role": "group1"},
+      {"text": "Group 2", "role": "group2"},
+      {"text": "Group 2", "role": "group2"},
+      {"text": "Group 2", "role": "group2"},
+      {"text": "Group 3", "role": "group3"},
+      {"text": "Group 3", "role": "group3"}
+    ]'
+  demo="true"
 ></deep-chat>
 ```
 
@@ -1448,16 +1771,13 @@ A simple text input area that covers the full width of the chat component.
 
 <ComponentContainer>
   <DeepChatBrowser
-    stream={true}
+    connect={{stream: true}}
     demo={true}
-    initialMessages={[
+    history={[
       {text: 'Hey, how are you?', role: 'user'},
-      {text: 'I am doing great, how about you?', role: 'ai'},
+      {text: 'I am doing great, thanks.', role: 'ai'},
       {text: 'What is the meaning of life?', role: 'user'},
-      {
-        text: 'This completely depends on the person.',
-        role: 'ai',
-      },
+      {text: 'Seeking fulfillment and personal growth.', role: 'ai'},
     ]}
     style={{
       borderRadius: '10px',
@@ -1535,14 +1855,14 @@ A simple text input area that covers the full width of the chat component.
       }
     }
   }'
-  initialMessages='[
+  history='[
     {"text": "Hey, how are you?", "role": "user"},
-    {"text": "I am doing great, how about you?", "role": "ai"},
+    {"text": "I am doing great, thanks.", "role": "ai"},
     {"text": "What is the meaning of life?", "role": "user"},
-    {"text": "This completely depends on the person.", "role": "ai"}
+    {"text": "Seeking fulfillment and personal growth.", "role": "ai"}
   ]'
   demo="true"
-  stream="true"
+  connect='{"stream": true}'
 ></deep-chat>
 ```
 

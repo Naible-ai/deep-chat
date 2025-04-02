@@ -1,5 +1,5 @@
 ---
-sidebar_position: 9
+sidebar_position: 10
 ---
 
 # Methods
@@ -58,7 +58,7 @@ a _false_ argument to prevent this.
   <DeepChatBrowser
     style={{borderRadius: '8px'}}
     demo={true}
-    initialMessages={[
+    history={[
       {text: 'What is 2 + 2?', role: 'user'},
       {text: 'The result of 2 + 2 is 4.', role: 'ai'},
       {text: 'Wrong, it is 5.', role: 'user'},
@@ -81,13 +81,13 @@ chatElementRef.clearMessages();
 
 ### `submitUserMessage` {#submitUserMessage}
 
-- Type: (`text: string`) => `void`
+- Type: ([`message: UserMessage`](#UserMessage)) => `void`
 
-Send a user message programmatically.
+Send a new user message.
 
 #### Example
 
-<ComponentContainerMethods propertyName={'submitUserMessage'} displayResults={false} argument={'User message'}>
+<ComponentContainerMethods propertyName={'submitUserMessage'} displayResults={false} args={[{text: 'User message'}]}>
   <DeepChatBrowser style={{borderRadius: '8px'}} demo={true}></DeepChatBrowser>
 </ComponentContainerMethods>
 
@@ -95,7 +95,104 @@ Send a user message programmatically.
 <TabItem value="js" label="Code">
 
 ```html
-chatElementRef.submitUserMessage("User message");
+chatElementRef.submitUserMessage({text: "User message"});
+```
+
+</TabItem>
+</Tabs>
+
+<LineBreak></LineBreak>
+
+#### `UserMessage` {#UserMessage}
+
+- Type: \{`text?: string`, [`files?: File[] | FileList`](https://developer.mozilla.org/en-US/docs/Web/API/FileList)\}
+
+`text` is the text content of the outgoing message. <br />
+`files` is an array containing files that are going to be part of the outgoing message. This can either be an array
+of [`File`](https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications) objects or a [`FileList`](https://developer.mozilla.org/en-US/docs/Web/API/FileList)
+object which typically comes from a [file input](https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications). <br />
+
+#### Files Example
+
+<Tabs>
+<TabItem value="js" label="Code">
+
+```text
+// html
+<input type="file" id="files-input" accept="image/png, image/jpeg" />
+
+// javascript
+const filesInput = document.getElementById('files-input');
+filesInput.onchange = (event) => {
+  chatElement.submitUserMessage({files: event.target.files});
+};
+```
+
+</TabItem>
+</Tabs>
+
+<LineBreak></LineBreak>
+
+### `addMessage` {#addMessage}
+
+- Type: ([`message: Response`](/docs/connect#Response), `isUpdate?: boolean`) => `void`
+
+Add a message to the chat. <br />
+`message` is an object containing message details. <br />
+`isUpdate` identifies whether the message should be treated as new - e.g. should [`onMessage`](/docs/events#onMessage) event
+and [`textToSpeech`](/docs/speech#textToSpeech) be triggered.
+
+#### Example
+
+<ComponentContainerMethods propertyName={'addMessage'} displayResults={false} args={[{text: `New message`, role: 'user'}]}>
+  <DeepChatBrowser style={{borderRadius: '8px'}} demo={true}></DeepChatBrowser>
+</ComponentContainerMethods>
+
+<Tabs>
+<TabItem value="js" label="Code">
+
+```javascript
+chatElementRef.addMessage({text: `New message`, role: 'user'});
+```
+
+</TabItem>
+</Tabs>
+
+<LineBreak></LineBreak>
+
+:::tip
+This can be used to add [suggestion buttons](/docs/messages/HTML#moreExamples) after message.
+:::
+
+<LineBreak></LineBreak>
+
+### `updateMessage` {#updateMessage}
+
+- Type: ([`message: MessageContent`](/docs/messages#MessageContent), `index: number`) => `void`
+
+Updates an existing message in the chat. <br />
+`message` is an object containing new message details. If the previous version of message contains multiple properties such as `text` and `html`, this will overwrite them both. <br />
+`index` is the index number of the message to be updated from the top. If you are not sure about the index, use [`getMessages`](#getMessages) to find the index of your target message.
+
+#### Example
+
+<ComponentContainerMethods
+  propertyName={'updateMessage'}
+  displayResults={false}
+  args={[{text: `New text.`, role: 'user'}, 0]}
+>
+  <DeepChatBrowser
+    style={{borderRadius: '8px'}}
+    demo={true}
+    history={[{text: 'Message to be updated.', role: 'user'}]}
+  ></DeepChatBrowser>
+</ComponentContainerMethods>
+
+<Tabs>
+<TabItem value="js" label="Code">
+
+```javascript
+chatElementRef.updateMessage({text: `New text.`}, 0);
 ```
 
 </TabItem>
@@ -114,7 +211,7 @@ Moves the chat's scrollbar to the bottom.
 <ComponentContainerMethods propertyName={'scrollToBottom'} displayResults={false}>
   <DeepChatBrowser
     style={{borderRadius: '8px'}}
-    initialMessages={[
+    history={[
       {
         role: 'user',
         text: 'So close it has no boundaries. A blinking cursor pulses in the electric darkness like a heart coursing with phosphorous light, burning beneath the derma of black-neon glass. A PHONE begins to RING, we hear it as though we were making the call.  The cursor continues to throb, relentlessly patient, until... Hello? Data now slashes across the screen, information flashing faster than we read.',
@@ -164,13 +261,39 @@ chatElementRef.focusInput();
 
 <LineBreak></LineBreak>
 
+### `setPlaceholderText` {#setPlaceholderText}
+
+- Type: (`text: string`) => `void`
+
+Dynamically change the text input placeholder. <br />
+
+#### Example
+
+<ComponentContainerMethods propertyName={'setPlaceholderText'} argument={'New placeholder text'} displayResults={false}>
+  <DeepChatBrowser style={{borderRadius: '8px'}} demo={true}></DeepChatBrowser>
+</ComponentContainerMethods>
+
+<Tabs>
+<TabItem value="js" label="Code">
+
+```html
+chatElementRef.setPlaceholderText("New placeholder text");
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+Default placeholder text should be set using the `placeholder` property in [`textInput`](/docs/styles/#textInput).
+:::
+
+<LineBreak></LineBreak>
+
 ### `disableSubmitButton` {#disableSubmitButton}
 
-- Type: (`isActive?: boolean`) => `void`
+- Type: (`override?: boolean`) => `void`
 
-By default the [`submitButton`](/docs/styles#submitButtonStyles) automatically enables and disables itself based on the user's input
-or the [websocket](/docs/connect#Websocket) connection. This method overrides this behaviour and allows you to disable it manually.
-To reset back to automatic behaviour - call this method again with a boolean _false_ argument.
+Disables the submit button. To re-enable automatic state handling - call this method again with a boolean argument of _false_.
 
 #### Example
 
@@ -194,7 +317,7 @@ chatElementRef.disableSubmitButton();
 
 - Type: `() => void`
 
-If your messages contain [Code](/docs/messages/#code-messages) and you are using the [`higlight.js`](https://www.npmjs.com/package/highlight.js?activeTab=readme) module to highlight them
+If your `text` messages contain [Code](/docs/messages/#code-messages) and you are using the [`higlight.js`](https://www.npmjs.com/package/highlight.js?activeTab=readme) module to highlight them
 (as per [external module](/examples/externalModules) guidelines), sometimes the module may load after the messages have been rendered, leaving the code without a highlight. In such instances, you can use this
 method to highlight the code with the loaded module.
 
@@ -203,7 +326,7 @@ method to highlight the code with the loaded module.
 <ComponentContainerHighlightMethod displayResults={false}>
   <DeepChatBrowser
     style={{borderRadius: '8px'}}
-    initialMessages={[
+    history={[
       {
         text: '```java\nwhile (i < 5) {\n console.log("hi");\n i+= 1;\n}\n```',
         role: 'ai',

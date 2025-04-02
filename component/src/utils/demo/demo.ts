@@ -1,19 +1,16 @@
-import {MessageUtils} from '../../views/chat/messages/messageUtils';
-import {ResponseInterceptor} from '../../types/interceptors';
-import {MessageContentI} from '../../types/messagesInternal';
+import {MessageContentI, MessageToElements} from '../../types/messagesInternal';
 import {Messages} from '../../views/chat/messages/messages';
-import {StreamHandlers} from '../../services/serviceIO';
+import {ServiceIO} from '../../services/serviceIO';
+import {RequestUtils} from '../HTTP/requestUtils';
 import {DemoResponse} from '../../types/demo';
 import {Response} from '../../types/response';
 import {Stream} from '../HTTP/stream';
 
-type Finish = () => void;
-
 export class Demo {
   public static readonly URL = 'deep-chat-demo';
 
-  private static generateResponse(messages: Messages) {
-    const requestMessage = messages.messages[messages.messages.length - 1];
+  private static generateResponse(messageToElements: MessageToElements) {
+    const requestMessage = messageToElements[messageToElements.length - 1][0];
     if (requestMessage.files && requestMessage.files.length > 0) {
       if (requestMessage.files.length > 1) {
         return 'These are interesting files!';
@@ -46,32 +43,37 @@ export class Demo {
     return customResponse;
   }
 
-  private static getResponse(messages: Messages): Response {
-    return messages.customDemoResponse
-      ? Demo.getCustomResponse(messages.customDemoResponse, messages.messages[messages.messages.length - 1])
-      : {text: Demo.generateResponse(messages)};
+  private static getResponse({customDemoResponse, messageToElements}: Messages): Response {
+    return customDemoResponse
+      ? Demo.getCustomResponse(customDemoResponse, messageToElements[messageToElements.length - 1][0])
+      : {text: Demo.generateResponse(messageToElements)};
   }
 
   // timeout is used to simulate a timeout for a response to come back
-  public static request(messages: Messages, onFinish: Finish, responseInterceptor?: ResponseInterceptor) {
+  public static request(io: ServiceIO, messages: Messages) {
     const response = Demo.getResponse(messages);
     setTimeout(async () => {
-      const preprocessedResponse = (await responseInterceptor?.(response)) || response;
-      if (preprocessedResponse.error) {
-        messages.addNewErrorMessage('service', preprocessedResponse.error);
+      const result = await RequestUtils.basicResponseProcessing(messages, response, {io});
+      if (!result) return io.completionsHandlers.onFinish();
+      const messageDataArr = Array.isArray(result) ? result : [result];
+      const errorMessage = messageDataArr.find((message) => typeof message.error === 'string');
+      if (errorMessage) {
+        messages.addNewErrorMessage('service', errorMessage.error);
+        io.completionsHandlers.onFinish();
+      } else if (Stream.isSimulatable(io.stream, result as Response)) {
+        Stream.simulate(messages, io.streamHandlers, result as Response);
       } else {
-        preprocessedResponse.role ??= MessageUtils.AI_ROLE;
-        messages.addNewMessage(preprocessedResponse);
+        messageDataArr.forEach((data) => messages.addNewMessage(data));
+        io.completionsHandlers.onFinish();
       }
-      onFinish();
     }, 400);
   }
 
   // timeout is used to simulate a timeout for a response to come back
-  public static requestStream(messages: Messages, sh: StreamHandlers) {
+  public static requestStream(messages: Messages, io: ServiceIO) {
     setTimeout(() => {
       const response = Demo.getResponse(messages);
-      Stream.simulate(messages, sh, response);
+      Stream.simulate(messages, io.streamHandlers, response, io);
     }, 400);
   }
 }

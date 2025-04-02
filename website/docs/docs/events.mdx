@@ -1,20 +1,20 @@
 ---
-sidebar_position: 10
+sidebar_position: 11
 ---
 
 # Events
 
 Events can be observed in two ways, either by assigning a function to a property or by listening to custom events fired from the component element.
 
-### `onNewMessage` {#onNewMessage}
+### `onMessage` {#onMessage}
 
-- Function: (`newMessage: Body`) => `void`
-- Event: `new-message`
-- Body: {[`message: MessageContent`](/docs/messages#MessageContent), `isInitial: boolean`}
+- Function: (`body: Body`) => `void`
+- Event: `message`
+- `Body`: \{[`message: MessageContent`](/docs/messages#MessageContent), `isHistory: boolean`\}
 
 Triggered when a message is sent from the user and recieved from the target service. <br />
 `message` encompasses all of the message contents. <br />
-`isInitial` is used to determine whether if the message is from the prepopulated [`initialMessages`](/docs/messages#initialMessages) property.
+`isHistory` is used to determine whether if the message is from the prepopulated [`history`](/docs/messages#history) property.
 
 #### Example
 
@@ -29,7 +29,7 @@ import Tabs from '@theme/Tabs';
 
 <BrowserOnly>{() => require('@site/src/components/nav/autoNavToggle').readdAutoNavShadowToggle()}</BrowserOnly>
 
-<ComponentContainerEvents propertyName={'onNewMessage'}>
+<ComponentContainerEvents propertyName={'onMessage'}>
   <DeepChatBrowser style={{borderRadius: '8px'}} demo={true}></DeepChatBrowser>
 </ComponentContainerEvents>
 
@@ -37,7 +37,7 @@ import Tabs from '@theme/Tabs';
 <TabItem value="js" label="Function">
 
 ```html
-chatElementRef.onNewMessage = (message) => { console.log(message); };
+chatElementRef.onMessage = (message) => { console.log(message); };
 ```
 
 </TabItem>
@@ -46,7 +46,7 @@ chatElementRef.onNewMessage = (message) => { console.log(message); };
 ```html
 <!-- This example is for Vanilla JS and should be tailored to your framework (see Examples) -->
 
-chatElementRef.addEventListener('new-message', (message) => { console.log(message.detail); });
+chatElementRef.addEventListener('new-message', (event) => { console.log(event.detail); });
 ```
 
 </TabItem>
@@ -68,7 +68,7 @@ Triggered when the [`clearMessages`](/docs/methods#clearMessages) method has bee
     <DeepChatBrowser
       style={{borderRadius: '8px'}}
       demo={true}
-      initialMessages={[
+      history={[
         {text: 'What is 2 + 2?', role: 'user'},
         {text: 'The result of 2 + 2 is 4.', role: 'ai'},
         {text: 'Wrong, it is 5.', role: 'user'},
@@ -101,7 +101,7 @@ chatElementRef.addEventListener('messages-cleared', () => { console.log("Message
 
 ### `onComponentRender` {#onComponentRender}
 
-- Function: () => `void`
+- Function: (`chatElementRef: DeepChat`) => `void`
 - Event: `render`
 
 Triggered when the component has finished rendering on the browser's window.
@@ -126,6 +126,45 @@ chatElementRef.onComponentRender = () => { console.log("Finished rendering"); };
 <!-- This example is for Vanilla JS and should be tailored to your framework (see Examples) -->
 
 chatElementRef.addEventListener('render', () => { console.log("Finished rendering"); });
+```
+
+</TabItem>
+</Tabs>
+
+:::note
+Setting a property's value on the DeepChat element when this event is triggered can cause infinite recursion
+as the component will re-render every time a property value is set. Use a flag variable to prevent this - [example](https://github.com/OvidijusParsiunas/deep-chat/issues/99#issuecomment-1899202984).
+:::
+
+<LineBreak></LineBreak>
+
+### `onError` {#onError}
+
+- Function: (error: string) => `void`
+- Event: `error`
+
+Triggered when an error message appears in the chat.
+
+#### Example
+
+<ComponentContainerEvents propertyName={'onError'}>
+  <DeepChatBrowser style={{borderRadius: '8px'}} demo={{response: {error: 'custom error'}}}></DeepChatBrowser>
+</ComponentContainerEvents>
+
+<Tabs>
+<TabItem value="js" label="Function">
+
+```html
+chatElementRef.onError = (error) => { console.log(error); };
+```
+
+</TabItem>
+<TabItem value="py" label="Event">
+
+```html
+<!-- This example is for Vanilla JS and should be tailored to your framework (see Examples) -->
+
+chatElementRef.addEventListener('error', (event) => { console.log(event.detail); });
 ```
 
 </TabItem>

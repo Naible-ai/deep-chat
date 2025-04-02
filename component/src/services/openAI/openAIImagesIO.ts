@@ -1,3 +1,4 @@
+import {OpenAI, OpenAIImagesDalle2, OpenAIImagesDalle3} from '../../types/openAI';
 import {BASE_64_PREFIX} from '../../utils/element/imageUtils';
 import {MessageContentI} from '../../types/messagesInternal';
 import {Messages} from '../../views/chat/messages/messages';
@@ -5,15 +6,16 @@ import {RequestUtils} from '../../utils/HTTP/requestUtils';
 import {OpenAIImageResult} from '../../types/openAIResult';
 import {DirectServiceIO} from '../utils/directServiceIO';
 import {HTTPRequest} from '../../utils/HTTP/HTTPRequest';
-import {OpenAI, OpenAIImages} from '../../types/openAI';
 import {MessageFiles} from '../../types/messageFile';
 import {OpenAIUtils} from './utils/openAIUtils';
 import {Response} from '../../types/response';
 import {DeepChat} from '../../deepChat';
 
+type OpenAIImagesDalle = OpenAIImagesDalle2 | OpenAIImagesDalle3;
+
 export class OpenAIImagesIO extends DirectServiceIO {
   override insertKeyPlaceholderText = 'OpenAI API Key';
-  override getKeyLink = 'https://platform.openai.com/account/api-keys';
+  override keyHelpUrl = 'https://platform.openai.com/account/api-keys';
   private static readonly IMAGE_GENERATION_URL = 'https://api.openai.com/v1/images/generations';
   private static readonly IMAGE_VARIATIONS_URL = 'https://api.openai.com/v1/images/variations';
   private static readonly IMAGE_EDIT_URL = 'https://api.openai.com/v1/images/edits';
@@ -47,17 +49,17 @@ export class OpenAIImagesIO extends DirectServiceIO {
     return !!files?.[0] || !!(text && text.trim() !== '');
   }
 
-  private static createFormDataBody(body: OpenAIImages, image: File, mask?: File) {
+  private static createFormDataBody(body: OpenAIImagesDalle, image: File, mask?: File) {
     const formData = new FormData();
     formData.append('image', image);
     if (mask) formData.append('mask', mask);
     Object.keys(body).forEach((key) => {
-      formData.append(key, String(body[key as keyof OpenAIImages]));
+      formData.append(key, String(body[key as keyof OpenAIImagesDalle]));
     });
     return formData;
   }
 
-  private preprocessBody(body: OpenAIImages, lastMessage?: string) {
+  private preprocessBody(body: OpenAIImagesDalle, lastMessage?: string) {
     const bodyCopy = JSON.parse(JSON.stringify(body));
     if (lastMessage && lastMessage !== '') bodyCopy.prompt = lastMessage;
     return bodyCopy;
@@ -77,16 +79,16 @@ export class OpenAIImagesIO extends DirectServiceIO {
       formData = OpenAIImagesIO.createFormDataBody(this.rawBody, files[0]);
     }
     // need to pass stringifyBody boolean separately as binding is throwing an error for some reason
-    RequestUtils.tempRemoveContentHeader(this.requestSettings,
+    RequestUtils.tempRemoveContentHeader(this.connectSettings,
       HTTPRequest.request.bind(this, this, formData, messages), false);
   }
 
   override async callServiceAPI(messages: Messages, pMessages: MessageContentI[], files?: File[]) {
-    if (!this.requestSettings?.headers) throw new Error('Request settings have not been set up');
+    if (!this.connectSettings?.headers) throw new Error('Request settings have not been set up');
     if (files?.[0]) {
       this.callApiWithImage(messages, pMessages, files);
     } else {
-      if (!this.requestSettings) throw new Error('Request settings have not been set up');
+      if (!this.connectSettings) throw new Error('Request settings have not been set up');
       this.url = OpenAIImagesIO.IMAGE_GENERATION_URL;
       const body = this.preprocessBody(this.rawBody, pMessages[pMessages.length - 1].text);
       HTTPRequest.request(this, body, messages);

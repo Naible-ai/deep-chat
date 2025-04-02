@@ -1,11 +1,16 @@
 import {StyleUtils} from '../element/styleUtils';
+import {CustomStyle} from '../../types/styles';
+import {GoogleFont} from './googleFont';
 
 export class WebComponentStyleUtils {
   private static readonly DEFAULT_COMPONENT_STYLE: Partial<CSSStyleDeclaration> = {
     height: '350px',
     width: '320px',
-    border: '1px solid #cacaca',
-    fontFamily: `'Inter', sans-serif, Avenir, Helvetica, Arial`,
+    borderTop: '1px solid #cacaca',
+    borderRight: '1px solid #cacaca',
+    borderLeft: '1px solid #cacaca',
+    borderBottom: '1px solid #cacaca',
+    fontFamily: GoogleFont.DEFAULT_FONT_FAMILY,
     fontSize: '0.9rem',
     backgroundColor: 'white',
     position: 'relative',
@@ -19,7 +24,7 @@ export class WebComponentStyleUtils {
     if (!shadowRoot) return;
     try {
       WebComponentStyleUtils.applyStyleSheet(style, shadowRoot);
-    } catch (err) {
+    } catch (_) {
       // fallback for if CSSStyleSheet is not supported (Safari)
       WebComponentStyleUtils.addStyleElement(style, shadowRoot);
     }
@@ -37,7 +42,8 @@ export class WebComponentStyleUtils {
     shadowRoot.appendChild(stylesDocument);
   }
 
-  public static applyDefaultStyleToComponent(style: CSSStyleDeclaration) {
+  public static applyDefaultStyleToComponent(style: CSSStyleDeclaration, chatStyle?: CustomStyle) {
+    if (chatStyle) StyleUtils.applyToStyleIfNotDefined(style, chatStyle);
     StyleUtils.applyToStyleIfNotDefined(style, WebComponentStyleUtils.DEFAULT_COMPONENT_STYLE);
   }
 }

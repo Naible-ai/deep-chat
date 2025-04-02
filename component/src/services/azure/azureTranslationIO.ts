@@ -10,7 +10,7 @@ import {Azure} from '../../types/azure';
 
 export class AzureTranslationIO extends DirectServiceIO {
   override insertKeyPlaceholderText = 'Azure Translate Subscription Key';
-  override getKeyLink =
+  override keyHelpUrl =
     // eslint-disable-next-line max-len
     'https://learn.microsoft.com/en-us/azure/api-management/api-management-subscriptions#create-and-manage-subscriptions-in-azure-portal';
   url = '';
@@ -33,7 +33,7 @@ export class AzureTranslationIO extends DirectServiceIO {
   }
 
   override async callServiceAPI(messages: Messages, pMessages: MessageContentI[]) {
-    if (!this.requestSettings) throw new Error('Request settings have not been set up');
+    if (!this.connectSettings) throw new Error('Request settings have not been set up');
     const body = this.preprocessBody(pMessages);
     HTTPRequest.request(this, body as unknown as object, messages);
   }

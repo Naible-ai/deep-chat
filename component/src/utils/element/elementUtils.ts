@@ -23,4 +23,16 @@ export class ElementUtils {
     (element.parentNode as HTMLElement).replaceChild(newElement, element);
     return newElement;
   }
+
+  public static scrollToBottom(element: HTMLElement, isAnimation = false) {
+    if (isAnimation) {
+      element.scrollTo({left: 0, top: element.scrollHeight, behavior: 'smooth'});
+    } else {
+      element.scrollTop = element.scrollHeight;
+    }
+  }
+
+  public static scrollToTop(element: HTMLElement) {
+    element.scrollTop = 0;
+  }
 }

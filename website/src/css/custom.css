@@ -71,6 +71,7 @@
   --start-text-color-hover: #0d5297;
   --start-text-code-color: #154b7a;
   --start-text-back-option-color: #2c2c2c;
+  --start-text-slider-color: #003372;
   --speech-gradient-start-color: rgb(255, 255, 255);
   --speech-gradient-end-color: rgb(220, 238, 255);
   --adaptive-logo-filter: unset;
@@ -176,6 +177,7 @@
   --start-text-color-hover: #5da9f6;
   --start-text-code-color: #5da9f6;
   --start-text-back-option-color: white;
+  --start-text-slider-color: white;
   --speech-gradient-start-color: rgba(57, 57, 57, 0);
   --speech-gradient-end-color: #272727;
   --adaptive-logo-filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%) hue-rotate(37deg)
@@ -549,4 +551,13 @@ h1 + h2 {
 /* algolia fix to not remove the scrollbar when opened as it would move the components */
 body.DocSearch--active {
   overflow: auto !important;
+}
+
+.youtube-icon {
+  width: 30px;
+  float: left;
+  margin-right: 10px;
+  margin-top: -2px;
+  filter: brightness(0) saturate(100%) invert(60%) sepia(65%) saturate(421%) hue-rotate(179deg) brightness(90%)
+    contrast(96%);
 }

@@ -1,17 +1,19 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 # Styles
 
 Properties related to messages.
 
-### `style` {#style}
+### `style` | `chatStyle` {#style}
 
 - Type: [`CustomStyle`](#CustomStyle)
 
-Styling for the chat's container element. It can either be defined as the usual [style attribute](https://www.w3schools.com/tags/att_style.asp)
-or as an object using your framework's syntax.<br />
+Styling for the chat's container element. <br />
+It can either be defined via the [`style` attribute](https://www.w3schools.com/tags/att_style.asp)
+or a `chatStyle` property that accepts an object. Both of these have the SAME outcome
+and are to be chosen by developer preference or framework compatibility.<br />
 
 import ComponentContainer from '@site/src/components/table/componentContainer';
 import DeepChatBrowser from '@site/src/components/table/deepChatBrowser';
@@ -33,6 +35,8 @@ import Tabs from '@theme/Tabs';
 
 ```html
 <deep-chat style="background-color: #f7f7f7; border-radius: 8px"></deep-chat>
+
+<deep-chat chatStyle='{"backgroundColor": "#f7f7f7", "borderRadius": "8px"}'></deep-chat>
 ```
 
 </TabItem>
@@ -42,6 +46,8 @@ import Tabs from '@theme/Tabs';
 <!-- This example is for Vanilla JS and should be tailored to your framework (see Examples) -->
 
 <deep-chat style="background-color: #f7f7f7; border-radius: 8px" demo="true"></deep-chat>
+
+<deep-chat chatStyle='{"backgroundColor": "#f7f7f7", "borderRadius": "8px"}' demo="true"></deep-chat>
 ```
 
 </TabItem>
@@ -92,14 +98,14 @@ Object containing CSS styling properties for the element containing files attach
 
 ### `dropupStyles` {#dropupStyles}
 
-- Type: {<br />
+- Type: \{<br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`button?: Button`](#Button), <br />
-  &nbsp;&nbsp;&nbsp;&nbsp; `menu?:` { <br />
+  &nbsp;&nbsp;&nbsp;&nbsp; `menu?:` \{ <br />
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [`container?: CustomStyle`](#CustomStyle), <br />
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [`item?: StatefulStyles`](#StatefulStyles), <br />
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [`iconContainer?: CustomStyle`](#CustomStyle), <br />
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [`text?: CustomStyle`](#CustomStyle) <br />
-  }}
+  \}\}
 
 Configuration for the dropup button and its menu element styles. <br />
 
@@ -272,17 +278,17 @@ Styling for the chat view's bottom area dedicated for text input and file button
 
 ### `textInput` {#textInput}
 
-- Type: {<br />
-  &nbsp;&nbsp;&nbsp;&nbsp; `styles?:` {[`text?: CustomStyle`](#CustomStyle), [`container?: CustomStyle`](#CustomStyle), [`focus?: CustomStyle`](#CustomStyle)}, <br />
-  &nbsp;&nbsp;&nbsp;&nbsp; `placeholder?:` {`text?: string`, [`style?: CustomStyle`](#CustomStyle)}, <br />
+- Type: \{<br />
+  &nbsp;&nbsp;&nbsp;&nbsp; `styles?:` \{[`text?: CustomStyle`](#CustomStyle), [`container?: CustomStyle`](#CustomStyle), [`focus?: CustomStyle`](#CustomStyle)\}, <br />
+  &nbsp;&nbsp;&nbsp;&nbsp; `placeholder?:` \{`text?: string`, [`style?: CustomStyle`](#CustomStyle)\}, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `characterLimit?: number`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `disabled?: boolean` <br />
-  }
+  \}
 
 Custom details for the chat's text input. <br />
 `styles` object defines the styling for the `text` element and its box `container`. The `focus` property is used to set the container style when it is focused. <br />
 `placeholder` object's `text` property is the initial text that is displayed on the input before the user makes any actions and
-`style` can be used to customize it. <br />
+`style` can be used to customize it. Use [`setPlaceholderText`](/docs/methods#setPlaceholderText) to change it dynamically. <br />
 `characterLimit` is the maximum number of charactes that can be inserted into the text input. <br />
 `disabled` is used to prevent the user from inserting text. This also comes with its own custom styling. <br />
 
@@ -394,19 +400,19 @@ Custom details for the chat's text input. <br />
 
 ### `submitButtonStyles` {#submitButtonStyles}
 
-- Type: {<br />
+- Type: \{<br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`submit?: ButtonStyles`](#ButtonStyles), <br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`loading?: ButtonStyles`](#ButtonStyles), <br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`stop?: ButtonStyles`](#ButtonStyles), <br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`disabled?: ButtonStyles`](#ButtonStyles), <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `alwaysEnabled?: boolean`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`position?: ButtonPosition`](#ButtonPosition) <br />
-  }
+  \}
 
 Custom styling for the submit button. <br />
 `submit` state is displayed when the user's input is valid and can be sent. <br />
 `loading` is used when waiting for a message response from the target server. <br />
-`stop` is used when a message response is being [`streamed`](/docs/connect#stream). <br />
+`stop` is used when a message response is being [`streamed`](/docs/connect#Stream). <br />
 `disabled` is used when the user's input cannot be sent (see [`validateInput`](/docs/interceptors#validateInput)) or the [websocket](/docs/connect#Websocket) connection is not live.
 You can also set this state manually by calling the [`disableSubmitButton`](/docs/methods#disableSubmitButton) method. <br />
 `alwaysEnabled` prevents the `disabled` button state from being used. <br />
@@ -416,11 +422,6 @@ You can also set this state manually by calling the [`disableSubmitButton`](/doc
 
 :::info
 The `loading`, `stop` and `disabled` styles will automatically inherit your `submit` style `default` state values.
-:::
-
-:::info
-When [displayLoadingBubble](/docs/messages/#displayLoadingBubble) is set to _false_ and the `loading` property's `content` string for `text` or `svg` is not set,
-the submit button will have a loading animation.
 :::
 
 <LineBreak></LineBreak>
@@ -555,7 +556,7 @@ however `hover` and `submit` need to be defined.
         },
       },
     }}
-    stream={true}
+    connect={{stream: true}}
     demo={true}
   ></DeepChatBrowser>
 </ComponentContainer>
@@ -621,7 +622,7 @@ however `hover` and `submit` need to be defined.
     "alwaysEnabled": true
   }'
   style="border-radius: 8px"
-  stream="true"
+  connect='{"stream": true}'
   demo="true"
 ></deep-chat>
 ```
@@ -698,8 +699,11 @@ however `hover` and `submit` need to be defined.
 
 - Type: `string`
 
-This string is primarily used to configure [`Webkit CSS`](https://developer.mozilla.org/en-US/docs/Web/CSS/WebKit_Extensions) which cannot be added through component's style properties. A great
-example of this is the [`::-webkit-scrollbar`](https://developer.mozilla.org/en-US/docs/Web/CSS/::-webkit-scrollbar) pseudo element which affects the style of the component's scrollbar.
+This value uses [CSS syntax](https://www.w3schools.com/css/css_syntax.ASP) as an alternative way to define styling in Deep Chat. <br />
+It can be used to configure [`Webkit CSS`](https://developer.mozilla.org/en-US/docs/Web/CSS/WebKit_Extensions)
+which cannot be added through component's [`style`](/docs/styles#style) properties. A great example of this is the [`::-webkit-scrollbar`](https://developer.mozilla.org/en-US/docs/Web/CSS/::-webkit-scrollbar)
+pseudo element which affects the style of the component's scrollbar. <br />
+It can also be used to add custom styling to [`html`](/docs/messages/#MessageContent) messages and override Deep Chat CSS.
 
 #### Example
 
@@ -707,7 +711,7 @@ example of this is the [`::-webkit-scrollbar`](https://developer.mozilla.org/en-
   <DeepChatBrowser
     style={{borderRadius: '8px'}}
     demo={true}
-    initialMessages={[
+    history={[
       {text: 'Hey, how are you?', role: 'user'},
       {text: 'I am doing great, how about you?', role: 'ai'},
       {text: 'What is the meaning of life?', role: 'user'},
@@ -763,7 +767,7 @@ example of this is the [`::-webkit-scrollbar`](https://developer.mozilla.org/en-
       background-color: #54a7ff;
       border-radius: 5px;
     }"
-  initialMessages='[
+  history='[
     {"text": "Hey, how are you?", "role": "user"},
     {"text": "I am doing great, how about you?", "role": "ai"},
     {"text": "What is the meaning of life?", "role": "user"},
@@ -804,7 +808,7 @@ as optionals. A TypeScript example can be found in this [link](https://github.co
 
 ### `StatefulStyles` {#StatefulStyles}
 
-- Type: {[`default?: CustomStyle`](#CustomStyle), [`hover?: CustomStyle`](#CustomStyle), [`click?: CustomStyle`](#CustomStyle)}
+- Type: \{[`default?: CustomStyle`](#CustomStyle), [`hover?: CustomStyle`](#CustomStyle), [`click?: CustomStyle`](#CustomStyle)\}
 
 Object defining styling properties for different mouse states on the element.
 
@@ -812,7 +816,7 @@ Object defining styling properties for different mouse states on the element.
 
 ### `Button` {#Button}
 
-- Type: {[`styles?: ButtonStyles`](#ButtonStyles), [`position?: ButtonPosition`](#ButtonPosition)}
+- Type: \{[`styles?: ButtonStyles`](#ButtonStyles), [`position?: ButtonPosition`](#ButtonPosition)\}
 
 Styling for a button inside the chat view. <br />
 `container` is used to style the base element of the button for its various mouse states. <br />
@@ -891,11 +895,11 @@ Styling for a button inside the chat view. <br />
 
 ### `ButtonStyles` {#ButtonStyles}
 
-- Type: {<br />
+- Type: \{<br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`container?: StatefulStyles`](#StatefulStyles), <br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`svg?: ButtonInnerStyles`](#ButtonInnerStyles), <br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`text?: ButtonInnerStyles`](#ButtonInnerStyles) <br />
-  }
+  \}
 
 Styling for a button inside the chat view. <br />
 `container` is used to style the base element of the button for its various mouse states. <br />
@@ -922,9 +926,7 @@ Styling for a button inside the chat view. <br />
       },
       alwaysEnabled: true,
     }}
-    directConnection={{
-      demo: true,
-    }}
+    demo={true}
     images={{
       button: {
         styles: {
@@ -1067,10 +1069,10 @@ You can use the [`CSSFilterConverter`](https://cssfilterconverter.com/) tool to 
 
 ### `ButtonInnerStyles` {#ButtonInnerStyles}
 
-- Type: {<br />
+- Type: \{<br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`styles?: StatefulStyles`](#StatefulStyles), <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `content?: string` <br />
-  }
+  \}
 
 Styling for an element inside a button container. <br />
 `styles` is used to set the style of the element for its various mouse states. <br />
@@ -1145,12 +1147,12 @@ Position for a button either _inside_ the [text input container](#textInput), _o
 
 ### `MicrophoneStyles` {#MicrophoneStyles}
 
-- Type: {<br />
+- Type: \{<br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`default?: ButtonStyles`](#ButtonStyles), <br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`active?: ButtonStyles`](#ButtonStyles), <br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`unsupported?: ButtonStyles`](#ButtonStyles), <br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`position?: ButtonPosition`](#ButtonPosition) <br />
-  }
+  \}
 
 Custom styling for the microphone button. <br />
 `default` is used for the default button state. <br />

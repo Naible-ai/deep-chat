@@ -11,7 +11,7 @@ import React from 'react';
 // TO-DO
 // add a copy button when hovering over code
 // TO-DO
-// images, audio, gifs, camera, speech-to-text, stream
+// speech-to-text, stream
 
 // editingChatRef is used for displaying modal
 export default function ServiceModal({chatComponent, collapseStates, setEditingChatRef, view}) {
@@ -60,7 +60,7 @@ export default function ServiceModal({chatComponent, collapseStates, setEditingC
     setAvailableTypes(availableTypes);
     const type = newActiveType || availableTypes[0];
     setActiveType(type);
-    if (newService === 'custom') {
+    if (newService === 'custom' || newService === 'webModel') {
       setRequiredValue(chatComponent.connect[newService]?.url || '');
       setOptionalParameters(SERVICE_MODAL_FORM_CONFIG[newService]);
     } else {
@@ -70,15 +70,15 @@ export default function ServiceModal({chatComponent, collapseStates, setEditingC
     }
     setTimeout(() => {
       changeCode(newService, type);
-      // 6 as otherwise when connect is custom and opening modal causes extractOptionalParameterValues to throw error
-    }, 6);
+      // 5 as otherwise when connect is custom and opening modal causes extractOptionalParameterValues to throw error
+    }, 5);
   };
 
   const changeType = (newType) => {
     const type = changeFirstLetter(newType, false);
     setActiveType(type);
     setOptionalParameters(
-      activeService === 'custom'
+      activeService === 'custom' || activeService === 'webModel'
         ? SERVICE_MODAL_FORM_CONFIG[activeService]
         : SERVICE_MODAL_FORM_CONFIG[activeService][type]
     );
@@ -101,27 +101,31 @@ export default function ServiceModal({chatComponent, collapseStates, setEditingC
   const changeCode = (serviceArg, newTypeArg) => {
     const service = serviceArg || activeService;
     const type = newTypeArg || activeType;
-    const connect = constructConnect(optionalParamsRef.current, service, type);
-    if (service === 'custom') {
-      const websocketValue = connect['custom'].websocket === 'true';
-      setWebsocket(websocketValue);
-      if (websocketValue) {
-        setTimeout(() => {
-          const newConnect = constructConnect(optionalParamsRef.current, service, type);
-          setCode(getCodeStr(newConnect, true, view));
-        });
-        return;
+    // timeout for optional parameters to be populated up in time
+    // test by creating OpenAI Assistant, set load_thread_history to true, submit, then open modal again to see if code section is correct
+    setTimeout(() => {
+      const connect = constructConnect(optionalParamsRef.current, service, type);
+      if (service === 'custom') {
+        const websocketValue = connect['custom'].websocket === 'true';
+        setWebsocket(websocketValue);
+        if (websocketValue) {
+          setTimeout(() => {
+            const newConnect = constructConnect(optionalParamsRef.current, service, type);
+            setCode(getCodeStr(newConnect, true, view));
+          });
+          return;
+        }
+        return setCode(getCodeStr(connect, true, view));
       }
-      return setCode(getCodeStr(connect, true, view));
-    }
-    setCode(getCodeStr(connect, false, view, type));
+      setCode(getCodeStr(connect, false, view, type));
+    });
   };
 
   function constructConnect(optionalParamsEl, activeService, activeType) {
     if (activeService === 'demo') return {demo: true};
     const optionalParamsValues = optionalParamsEl ? extractOptionalParameterValues(optionalParamsEl) : [];
     const optionalParams =
-      activeService === 'custom'
+      activeService === 'custom' || activeService === 'webModel'
         ? SERVICE_MODAL_FORM_CONFIG[activeService]
         : SERVICE_MODAL_FORM_CONFIG[activeService][activeType];
     const connect = buildConnect(optionalParams, optionalParamsValues);
@@ -130,6 +134,7 @@ export default function ServiceModal({chatComponent, collapseStates, setEditingC
       const requiredSecondValue = requiredValue2Ref.current?.value;
       connect[requiredParameter] = requiredSecondValue;
     }
+    if (activeService === 'webModel') return {webModel: connect};
     return {
       [activeService]:
         activeService === 'custom'
@@ -161,7 +166,7 @@ export default function ServiceModal({chatComponent, collapseStates, setEditingC
         <b className="playground-modal-title">Service Settings</b>
         <div className="playgroud-service-modal-form">
           <Service activeService={activeService} changeService={changeService} modalRef={modalRef} />
-          {activeService !== 'demo' && activeService !== 'custom' && (
+          {activeService !== 'demo' && activeService !== 'custom' && activeService !== 'webModel' && (
             <ServiceType
               availableTypes={availableTypes}
               activeService={activeService}
@@ -171,7 +176,7 @@ export default function ServiceModal({chatComponent, collapseStates, setEditingC
               modalRef={modalRef}
             />
           )}
-          {activeService !== 'demo' && activeService !== 'custom' && (
+          {activeService !== 'demo' && activeService !== 'custom' && activeService !== 'webModel' && (
             <Required
               ref={requiredValueRef}
               requiredValue={requiredValue}
@@ -188,7 +193,7 @@ export default function ServiceModal({chatComponent, collapseStates, setEditingC
               requiredValue={requiredValue}
               setValue={changeRequiredValue.bind(this, setRequiredValue)}
               title="URL:"
-              link={'https://deepchat.dev/docs/connect#Request'}
+              link={'https://deepchat.dev/docs/connect#connect-1'}
             />
           )}
           {REQUIRED_PARAMETERS[activeService]?.[activeType] && (
@@ -212,7 +217,7 @@ export default function ServiceModal({chatComponent, collapseStates, setEditingC
               ref={optionalParamsRef}
               optionalParameters={optionalParameters}
               connect={
-                activeService === 'custom'
+                activeService === 'custom' || activeService === 'webModel'
                   ? chatComponent.connect[activeService]
                   : chatComponent.connect[activeService]?.[activeType]
               }
@@ -220,7 +225,7 @@ export default function ServiceModal({chatComponent, collapseStates, setEditingC
               websocket={websocket}
               pseudoNames={PSEUDO_NAMES}
               links={
-                activeService === 'custom'
+                activeService === 'custom' || activeService === 'webModel'
                   ? OPTIONAL_PARAM_TO_LINK[activeService]
                   : OPTIONAL_PARAM_TO_LINK[activeService]?.[activeType]
               }
@@ -275,11 +280,18 @@ function getCodeStr(connect, isCustom, view, type) {
   if (connect.demo) {
     return `<deep-chat demo="true"></deep-chat>`;
   }
+  if (connect.webModel) {
+    return `<deep-chat ${
+      Object.keys(connect.webModel).length > 0
+        ? `webModel='${JSON.stringify(connect.webModel, null, 2)}'`
+        : `webModel="true"`
+    }></deep-chat>`;
+  }
   let files = '';
   if (isCustom) {
     const extractedFiles = extractFiles(connect['custom']);
     if (extractedFiles.length > 1) files = extractedFiles;
-    return `<deep-chat${files} request='${JSON.stringify(connect['custom'], null, 2)}'></deep-chat>`;
+    return `<deep-chat${files} connect='${JSON.stringify(connect['custom'], null, 2)}'></deep-chat>`;
   }
   const service = Object.keys(connect)[0];
   if (!view.isKeyVisible) {
@@ -353,9 +365,6 @@ const REQUIRED_PARAMETERS = {
   huggingFace: {
     questionAnswer: 'context',
   },
-  openAI: {
-    assistant: 'assistant_id',
-  },
 };
 
 const REQUIRED_PARAMETERS_LINKS = {
@@ -366,9 +375,6 @@ const REQUIRED_PARAMETERS_LINKS = {
   },
   huggingFace: {
     questionAnswer: 'https://huggingface.co/docs/api-inference/detailed_parameters#question-answering-task',
-  },
-  openAI: {
-    assistant: 'https://platform.openai.com/docs/api-reference/assistants',
   },
 };
 
@@ -401,6 +407,7 @@ const SERVICE_MODAL_FORM_CONFIG = {
   custom: {
     method: ['POST', 'PUT', 'GET'],
     websocket: ['true', 'false'],
+    stream: ['true', 'false'],
     headers: 'constructable object',
     additionalBodyProps: 'constructable object',
     allowImages: ['true', 'false'],
@@ -410,6 +417,7 @@ const SERVICE_MODAL_FORM_CONFIG = {
     allowMicrophone: ['true', 'false'],
     allowMixedFiles: ['true', 'false'],
   },
+  webModel: {model: 'string', instruction: 'string'},
   openAI: {
     chat: {
       model: 'string',
@@ -421,12 +429,18 @@ const SERVICE_MODAL_FORM_CONFIG = {
       allowCamera: ['true', 'false'],
     },
     assistant: {
+      assistant_id: 'string',
+      thread_id: 'string',
+      load_thread_history: ['true', 'false'],
       allowMixedFiles: ['true', 'false'],
     },
     images: {
+      model: 'string',
       n: 'number',
-      size: ['256x256', '512x512', '1024x1024'],
+      size: 'string',
       user: 'string',
+      quality: 'string',
+      style: 'string,',
     },
     textToSpeech: {
       model: 'string',
@@ -443,9 +457,8 @@ const SERVICE_MODAL_FORM_CONFIG = {
   cohere: {
     chat: {
       model: 'string',
-      user_name: 'number',
       temperature: 'number',
-      max_tokens: 'number',
+      prompt_truncation: ['AUTO', 'OFF'],
     },
     textGeneration: {
       model: 'string',
@@ -456,7 +469,7 @@ const SERVICE_MODAL_FORM_CONFIG = {
       frequency_penalty: 'number',
       presence_penalty: 'number',
       truncate: ['NONE', 'START', 'END'],
-      logit_bias: 'constructable object',
+      preset: 'string',
     },
     summarization: {
       model: 'string',
@@ -602,6 +615,7 @@ const SERVICE_MODAL_FORM_CONFIG = {
 const SERVICE_TYPE_TO_API_KEY_LINK = {
   demo: '',
   custom: '',
+  webModel: '',
   openAI: 'https://platform.openai.com/account/api-keys',
   cohere: 'https://dashboard.cohere.ai/api-keys',
   huggingFace: 'https://huggingface.co/settings/tokens',
@@ -614,26 +628,44 @@ const SERVICE_TYPE_TO_API_KEY_LINK = {
 const OPTIONAL_PARAM_TO_LINK = {
   demo: {demo: ''},
   custom: {
-    method: 'https://deepchat.dev/docs/connect#Request',
+    method: 'https://deepchat.dev/docs/connect#connect-1',
     websocket: 'https://deepchat.dev/docs/connect#Websocket',
-    headers: 'https://deepchat.dev/docs/connect#Request',
-    additionalBodyProps: 'https://deepchat.dev/docs/connect#Request',
+    stream: 'https://deepchat.dev/docs/connect#Stream',
+    headers: 'https://deepchat.dev/docs/connect#connect-1',
+    additionalBodyProps: 'https://deepchat.dev/docs/connect#connect-1',
+    allowImages: 'https://deepchat.dev/docs/files#images',
+    allowCamera: 'https://deepchat.dev/docs/files#camera',
+    allowGifs: 'https://deepchat.dev/docs/files#gifs',
+    allowAudio: 'https://deepchat.dev/docs/files#audio',
+    allowMicrophone: 'https://deepchat.dev/docs/files#microphone',
+    allowMixedFiles: 'https://deepchat.dev/docs/files/#mixedFiles',
+  },
+  webModel: {
+    model:
+      'https://github.com/OvidijusParsiunas/deep-chat/blob/4449a91e26bb86d1d3a45633fd49c4dead3293d4/component/src/types/webModel/webModel.ts#L1',
+    instruction: 'https://deepchat.dev/docs/webModel#webModel',
   },
   openAI: {
     chat: {
       system_prompt: 'https://deepchat.dev/docs/directConnection/OpenAI#Chat',
-      model: 'https://platform.openai.com/docs/api-reference/chat/object#model',
-      max_tokens: 'https://platform.openai.com/docs/api-reference/chat/create#max_tokens',
-      temperature: 'https://platform.openai.com/docs/api-reference/chat/create#temperature',
-      top_p: 'https://platform.openai.com/docs/api-reference/chat/create#top_p',
+      model: 'https://platform.openai.com/docs/api-reference/chat/object#chat/object-model',
+      max_tokens: 'https://platform.openai.com/docs/api-reference/chat/create#chat-create-max_tokens',
+      temperature: 'https://platform.openai.com/docs/api-reference/chat/create#chat-create-temperature',
+      top_p: 'https://platform.openai.com/docs/api-reference/chat/create#chat-create-top_p',
     },
     assistant: {
-      assistant_id: 'https://platform.openai.com/docs/api-reference/assistants',
+      assistant_id: 'https://deepchat.dev/docs/directConnection/OpenAI#Assistant',
+      thread_id: 'https://deepchat.dev/docs/directConnection/OpenAI#Assistant',
+      load_thread_history: 'https://deepchat.dev/docs/directConnection/OpenAI#Assistant',
+      allowMixedFiles: 'https://deepchat.dev/docs/files/#mixedFiles',
     },
     images: {
-      n: 'https://platform.openai.com/docs/api-reference/images/create#n',
-      size: 'https://platform.openai.com/docs/api-reference/images/create#size',
-      user: 'https://platform.openai.com/docs/api-reference/images/create#user',
+      model: 'https://platform.openai.com/docs/api-reference/images/create#images-create-model',
+      n: 'https://deepchat.dev/docs/directConnection/OpenAI#dall-e-2',
+      size: 'https://platform.openai.com/docs/api-reference/images/create#images-create-size',
+      user: 'https://platform.openai.com/docs/api-reference/images/create#images-create-user',
+      quality: 'https://deepchat.dev/docs/directConnection/OpenAI#dall-e-3',
+      style: 'https://deepchat.dev/docs/directConnection/OpenAI#dall-e-3,',
     },
     textToSpeech: {
       model: 'https://platform.openai.com/docs/api-reference/audio/createSpeech#audio-createspeech-model',
@@ -641,18 +673,19 @@ const OPTIONAL_PARAM_TO_LINK = {
       speed: 'https://platform.openai.com/docs/api-reference/audio/createSpeech#audio-createspeech-speed',
     },
     speechToText: {
-      model: 'https://platform.openai.com/docs/api-reference/audio/createTranscription#model',
-      temperature: 'https://platform.openai.com/docs/api-reference/audio/createTranscription#temperature',
-      language: 'https://platform.openai.com/docs/api-reference/audio/createTranscription#language',
+      model: 'https://platform.openai.com/docs/api-reference/audio/createTranscription#audio-createtranscription-model',
+      temperature:
+        'https://platform.openai.com/docs/api-reference/audio/createTranscription#audio-createtranscription-temperature',
+      language:
+        'https://platform.openai.com/docs/api-reference/audio/createTranscription#audio-createtranscription-language',
       type: 'https://platform.openai.com/docs/api-reference/audio',
     },
   },
   cohere: {
     chat: {
-      model: 'https://docs.cohere.com/docs/conversational-ai#parameters',
-      user_name: 'https://docs.cohere.com/docs/conversational-ai#parameters',
-      temperature: 'https://docs.cohere.com/docs/conversational-ai#parameters',
-      max_tokens: 'https://docs.cohere.com/docs/conversational-ai#parameters',
+      model: 'https://docs.cohere.com/reference/chat',
+      temperature: 'https://docs.cohere.com/reference/chat',
+      prompt_truncation: 'https://docs.cohere.com/reference/chat',
     },
     textGeneration: {
       model: 'https://docs.cohere.com/reference/generate',
@@ -664,6 +697,7 @@ const OPTIONAL_PARAM_TO_LINK = {
       presence_penalty: 'https://docs.cohere.com/reference/generate',
       truncate: 'https://docs.cohere.com/reference/generate',
       logit_bias: 'https://docs.cohere.com/reference/generate',
+      preset: 'https://docs.cohere.com/reference/generate',
     },
     summarization: {
       model: 'https://docs.cohere.com/reference/summarize-2',

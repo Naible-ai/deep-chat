@@ -11,7 +11,7 @@ import {DeepChat} from '../../deepChat';
 
 export class OpenAISpeechToTextIO extends DirectServiceIO {
   override insertKeyPlaceholderText = 'OpenAI API Key';
-  override getKeyLink = 'https://platform.openai.com/account/api-keys';
+  override keyHelpUrl = 'https://platform.openai.com/account/api-keys';
   private static readonly AUDIO_TRANSCRIPTIONS_URL = 'https://api.openai.com/v1/audio/transcriptions';
   private static readonly AUDIO_TRANSLATIONS_URL = 'https://api.openai.com/v1/audio/translations';
   private static readonly DEFAULT_MODEL = 'whisper-1';
@@ -75,13 +75,13 @@ export class OpenAISpeechToTextIO extends DirectServiceIO {
 
   // prettier-ignore
   override async callServiceAPI(messages: Messages, pMessages: MessageContentI[], files?: File[]) {
-    if (!this.requestSettings?.headers) throw new Error('Request settings have not been set up');
+    if (!this.connectSettings?.headers) throw new Error('Request settings have not been set up');
     if (!files?.[0]) throw new Error('No file was added');
-    this.url = this.requestSettings.url || this._service_url;
+    this.url = this.connectSettings.url || this._service_url;
     const body = this.preprocessBody(this.rawBody, pMessages);
     const formData = OpenAISpeechToTextIO.createFormDataBody(body, files[0]);
     // need to pass stringifyBody boolean separately as binding is throwing an error for some reason
-    RequestUtils.tempRemoveContentHeader(this.requestSettings,
+    RequestUtils.tempRemoveContentHeader(this.connectSettings,
       HTTPRequest.request.bind(this, this, formData, messages), false);
   }
 

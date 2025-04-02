@@ -7,8 +7,8 @@ sidebar_position: 3
 Deep Chat is preconfigured to connect to popular AI APIs right out of the box. <br /> Depending on the service you choose component assets
 such as buttons and intro panel will automatically be changed to suit the chosen service. Their configuration can still be overwitten manually. <br />
 
-<a href="https://youtu.be/ySU7Tj99mbA?si=DDDIvf1s_5WBr9Pc">
-  <img src={YoutubeLogo} width="30" style={{float: 'left', marginRight: '10px', marginTop: '-2px'}} />
+<a href="https://youtu.be/RnGEUJDOTTc">
+  <img src={YoutubeLogo} className={'youtube-icon'} />
   Video demo
 </a>
 
@@ -16,19 +16,19 @@ such as buttons and intro panel will automatically be changed to suit the chosen
 
 :::caution
 The [`directConnection`](#directConnection) and [`key`](#APIKey) properties are intended to be used for **prototyping purposes ONLY** and should not be
-deployed to a public website as their values can be accessed in the browser. Before going live, switch to using the [`request`](../connect#request)
+deployed to a public website as their values can be accessed in the browser. Before going live, switch to using the [`connect`](/docs/connect/#connect-1)
 property to connect to your server. Read more about this in [`Connect`](../connect) and check [examples](https://deepchat.dev/examples/servers).
 :::
 
 ### `directConnection` {#directConnection}
 
-- Type: {<br />
-  &nbsp;&nbsp;&nbsp;&nbsp; `openAI?:` {[`OpenAI`](openAI#openAI), [`APIKey`](#APIKey)}, <br />
-  &nbsp;&nbsp;&nbsp;&nbsp; `huggingFace?:` {[`HuggingFace`](huggingFace#huggingFace), [`APIKey`](#APIKey)}, <br />
-  &nbsp;&nbsp;&nbsp;&nbsp; `azure?:` {[`Azure`](azure#azure), [`APIKey`](#APIKey)}, <br />
-  &nbsp;&nbsp;&nbsp;&nbsp; `cohere?:` {[`Cohere`](cohere#cohere), [`APIKey`](#APIKey)}, <br />
-  &nbsp;&nbsp;&nbsp;&nbsp; `assemblyAI?:` {[`AssemblyAI`](assemblyAI#assemblyAI), [`APIKey`](#APIKey)}
-  }
+- Type: \{<br />
+  &nbsp;&nbsp;&nbsp;&nbsp; `openAI?:` \{[`OpenAI`](/docs/directConnection/OpenAI#openAI), [`APIKey`](#APIKey)\}, <br />
+  &nbsp;&nbsp;&nbsp;&nbsp; `huggingFace?:` \{[`HuggingFace`](/docs/directConnection/HuggingFace#huggingFace), [`APIKey`](#APIKey)\}, <br />
+  &nbsp;&nbsp;&nbsp;&nbsp; `azure?:` \{[`Azure`](/docs/directConnection/Azure#azure), [`APIKey`](#APIKey)\}, <br />
+  &nbsp;&nbsp;&nbsp;&nbsp; `cohere?:` \{[`Cohere`](/docs/directConnection/Cohere#cohere), [`APIKey`](#APIKey)\}, <br />
+  &nbsp;&nbsp;&nbsp;&nbsp; `assemblyAI?:` \{[`AssemblyAI`](/docs/directConnection/AssemblyAI#assemblyAI), [`APIKey`](#APIKey)\}
+  \}
 
 import ContainersKeyToggle from '@site/src/components/table/containersKeyToggle';
 import ComponentContainer from '@site/src/components/table/componentContainer';
@@ -47,7 +47,7 @@ Shared types for the `directConnection` property.
 
 ### `APIKey` {#APIKey}
 
-- Type: {`key?: string`, `validateKeyProperty?: boolean`}
+- Type: \{`key?: string`, `validateKeyProperty?: boolean`\}
 
 These object properties are used to load up the chat view without the user having to insert the API key. <br />
 `key` is the target service's API key required for authentication. <br />
@@ -56,7 +56,7 @@ is loaded up during the validation period.
 
 :::caution
 This object is intended to be used for **prototyping purposes ONLY** and should not be deployed to an environment as it can be accessed in the browser.
-Before going live, use the [`request`](../connect#request) property in combination with your own service to safely use your key there.
+Before going live, use the [`connect`](/docs/connect/#connect-1) property in combination with your own service to safely use your key there.
 Read more about this in [`Connect`](../connect) and check [examples](https://deepchat.dev/examples/servers).
 :::
 

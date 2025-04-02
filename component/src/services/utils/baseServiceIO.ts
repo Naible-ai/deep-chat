@@ -1,15 +1,18 @@
 import {CameraFilesServiceConfig, MicrophoneFilesServiceConfig} from '../../types/fileServiceConfigs';
+import {History} from '../../views/chat/messages/history/history';
 import {MessageContentI} from '../../types/messagesInternal';
 import {Messages} from '../../views/chat/messages/messages';
+import {RequestUtils} from '../../utils/HTTP/requestUtils';
 import {HTTPRequest} from '../../utils/HTTP/HTTPRequest';
 import {ValidateInput} from '../../types/validateInput';
 import {MessageLimitUtils} from './messageLimitUtils';
+import {Stream as StreamI} from '../../types/stream';
 import {Websocket} from '../../utils/HTTP/websocket';
 import {Legacy} from '../../utils/legacy/legacy';
 import {Stream} from '../../utils/HTTP/stream';
 import {Demo as DemoT} from '../../types/demo';
 import {Response} from '../../types/response';
-import {Request} from '../../types/request';
+import {Connect} from '../../types/connect';
 import {SetFileTypes} from './setFileTypes';
 import {Demo} from '../../utils/demo/demo';
 import {DeepChat} from '../../deepChat';
@@ -26,15 +29,16 @@ import {
 export class BaseServiceIO implements ServiceIO {
   readonly rawBody: any = {};
   deepChat: DeepChat;
-  validateConfigKey = false;
+  validateKeyProperty = false;
   canSendMessage: ValidateInput = BaseServiceIO.canSendMessage;
-  requestSettings: Request = {};
+  connectSettings: Connect = {};
   fileTypes: ServiceFileTypes = {};
   camera?: CameraFilesServiceConfig;
   recordAudio?: MicrophoneFilesServiceConfig;
   totalMessagesMaxCharLength?: number;
   maxMessages?: number;
   demo?: DemoT;
+  stream?: StreamI;
   // these are placeholders that are later populated in submitButton.ts
   completionsHandlers: CompletionsHandlers = {} as CompletionsHandlers;
   streamHandlers: StreamHandlers = {} as StreamHandlers;
@@ -42,13 +46,15 @@ export class BaseServiceIO implements ServiceIO {
   constructor(deepChat: DeepChat, existingFileTypes?: ServiceFileTypes, demo?: DemoT) {
     this.deepChat = deepChat;
     this.demo = demo;
-    Object.assign(this.rawBody, deepChat.request?.additionalBodyProps);
+    Object.assign(this.rawBody, deepChat.connect?.additionalBodyProps);
     this.totalMessagesMaxCharLength = deepChat?.requestBodyLimits?.totalMessagesMaxCharLength;
     this.maxMessages = deepChat?.requestBodyLimits?.maxMessages;
     SetFileTypes.set(deepChat, this, existingFileTypes);
-    if (deepChat.request) this.requestSettings = deepChat.request;
-    if (this.demo) this.requestSettings.url ??= Demo.URL;
-    if (this.requestSettings.websocket) Websocket.setup(this);
+    if (deepChat.connect) this.connectSettings = deepChat.connect;
+    if (this.demo) this.connectSettings.url ??= Demo.URL;
+    if (this.connectSettings.websocket) Websocket.setup(this);
+    this.stream = this.deepChat.connect?.stream || Legacy.checkForStream(this.deepChat);
+    if (deepChat.loadHistory) History.addErrorPrefix(this);
   }
 
   private static canSendMessage(text?: string, files?: File[], isProgrammatic?: boolean) {
@@ -87,59 +93,72 @@ export class BaseServiceIO implements ServiceIO {
   }
 
   private async request(body: any, messages: Messages, stringifyBody = true) {
-    // use actual stream if demo or when simulation prop not set
-    const {stream} = this.deepChat;
-    if (stream && (this.demo || typeof stream !== 'object' || !stream.simulation)) {
-      return Stream.request(this, body, messages);
+    if (this.stream && !Stream.isSimulation(this.stream)) {
+      return Stream.request(this, body, messages, stringifyBody);
     }
     return HTTPRequest.request(this, body, messages, stringifyBody);
   }
 
-  async callServiceAPI(messages: Messages, pMessages: MessageContentI[], _?: File[]) {
+  private async callAPIWithText(messages: Messages, pMessages: MessageContentI[]) {
     const body = {messages: pMessages, ...this.rawBody};
     let tempHeaderSet = false; // if the user has not set a header - we need to temporarily set it
-    if (!this.requestSettings.headers?.['Content-Type']) {
-      this.requestSettings.headers ??= {};
-      this.requestSettings.headers['Content-Type'] ??= 'application/json';
+    if (!this.connectSettings.headers?.['Content-Type']) {
+      this.connectSettings.headers ??= {};
+      this.connectSettings.headers['Content-Type'] ??= 'application/json';
       tempHeaderSet = true;
     }
     await this.request(body, messages);
-    if (tempHeaderSet) delete this.requestSettings.headers?.['Content-Type'];
+    if (tempHeaderSet) delete this.connectSettings.headers?.['Content-Type'];
   }
 
-  async callApiWithFiles(body: any, messages: Messages, pMessages: MessageContentI[], files: File[]) {
-    const formData = BaseServiceIO.createCustomFormDataBody(body, pMessages, files);
-    const previousRequestSettings = this.requestSettings;
+  private async callApiWithFiles(messages: Messages, pMessages: MessageContentI[], files: File[]) {
+    const formData = BaseServiceIO.createCustomFormDataBody(this.rawBody, pMessages, files);
+    const previousConnectSettings = this.connectSettings;
     const fileIO = this.getServiceIOByType(files[0]);
-    this.requestSettings = fileIO?.request || this.requestSettings;
+    this.connectSettings = fileIO?.connect || this.connectSettings;
     await this.request(formData, messages, false);
-    this.requestSettings = previousRequestSettings;
+    this.connectSettings = previousConnectSettings;
+  }
+
+  async callServiceAPI(messages: Messages, pMessages: MessageContentI[], files?: File[]) {
+    if (files) {
+      this.callApiWithFiles(messages, pMessages, files);
+    } else {
+      this.callAPIWithText(messages, pMessages);
+    }
   }
 
   // prettier-ignore
   async callAPI(requestContents: RequestContents, messages: Messages) {
-    if (!this.requestSettings) throw new Error('Request settings have not been set up');
+    if (!this.connectSettings) throw new Error('Request settings have not been set up');
     const processedMessages = MessageLimitUtils.processMessages(
-      messages.messages, this.maxMessages, this.totalMessagesMaxCharLength);
-    if (this.requestSettings.websocket) {
+      messages.messageToElements.map(([msg]) => msg), this.maxMessages, this.totalMessagesMaxCharLength);
+    // if handler is being used and demo is on, websocket calls should be directed to callServiceAPI
+    if (this.connectSettings.websocket && (!this.connectSettings.handler || this.connectSettings.url !== Demo.URL)) {
       const body = {messages: processedMessages, ...this.rawBody};
       Websocket.sendWebsocket(this, body, messages, false);
-    } else if (requestContents.files && !this.isDirectConnection()) {
-      this.callApiWithFiles(this.rawBody, messages, processedMessages, requestContents.files);
     } else {
       this.callServiceAPI(messages, processedMessages, requestContents.files);
     }
   }
 
-  // WORK - validation to say that the response should have text, files or error property, link to example
-  // and responseInterceptor
   async extractResultData(result: any | Response): Promise<Response | {makingAnotherRequest: true}> {
     if (result.error) throw result.error;
     if (result.result) return Legacy.handleResponseProperty(result);
+    // if invalid - process later in HTTPRequest.request
+    if (!RequestUtils.validateResponseFormat(result, !!this.stream)) return undefined as unknown as Response;
     return result;
   }
 
   public isDirectConnection() {
+    return false;
+  }
+
+  public isWebModel() {
+    return false;
+  }
+
+  public isCustomView() {
     return false;
   }
 }

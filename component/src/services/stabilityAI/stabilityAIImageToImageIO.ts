@@ -13,7 +13,7 @@ import {DeepChat} from '../../deepChat';
 
 // WORK - allow appropriate responses for invalid height etc
 export class StabilityAIImageToImageIO extends StabilityAIIO {
-  url = 'https://api.stability.ai/v1/generation/stable-diffusion-v1-5/image-to-image';
+  url = 'https://api.stability.ai/v1/generation/stable-diffusion-v1-6/image-to-image';
   private readonly _imageWeight: number | undefined;
   textInputPlaceholderText = 'Describe image changes';
   introPanelMarkUp = `
@@ -65,12 +65,12 @@ export class StabilityAIImageToImageIO extends StabilityAIIO {
 
   // prettier-ignore
   override async callServiceAPI(messages: Messages, pMessages: MessageContentI[], files?: File[]) {
-    if (!this.requestSettings) throw new Error('Request settings have not been set up');
+    if (!this.connectSettings) throw new Error('Request settings have not been set up');
     if (!files) throw new Error('Image was not found');
     const lastMessage = pMessages[pMessages.length - 1]?.text?.trim();
     const formData = this.createFormDataBody(this.rawBody, files[0], lastMessage);
     // need to pass stringifyBody boolean separately as binding is throwing an error for some reason
-    RequestUtils.tempRemoveContentHeader(this.requestSettings,
+    RequestUtils.tempRemoveContentHeader(this.connectSettings,
       HTTPRequest.request.bind(this, this, formData, messages), false);
   }
 

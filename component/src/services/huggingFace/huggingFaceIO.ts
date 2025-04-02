@@ -14,7 +14,7 @@ type HuggingFaceServiceConfig = true | (HuggingFaceModel & HuggingFaceServiceCon
 
 export class HuggingFaceIO extends DirectServiceIO {
   override insertKeyPlaceholderText = 'Hugging Face Token';
-  override getKeyLink = 'https://huggingface.co/settings/tokens';
+  override keyHelpUrl = 'https://huggingface.co/settings/tokens';
   private static readonly URL_PREFIX = 'https://api-inference.huggingface.co/models/';
   introPanelMarkUp = `
     <div style="width: 100%; text-align: center; margin-left: -10px"><b>Hugging Face</b></div>
@@ -50,7 +50,7 @@ export class HuggingFaceIO extends DirectServiceIO {
   }
 
   override async callServiceAPI(messages: Messages, pMessages: MessageContentI[], files?: File[]) {
-    if (!this.requestSettings) throw new Error('Request settings have not been set up');
+    if (!this.connectSettings) throw new Error('Request settings have not been set up');
     const body = this.preprocessBody(this.rawBody, pMessages, files) as object;
     HTTPRequest.request(this, body, messages);
   }

@@ -1,5 +1,6 @@
 import {ButtonPosition as ButtonPositionT} from '../../../../types/button';
 import {StatefulStyles} from '../../../../types/styles';
+import {ButtonAccessibility} from './buttonAccessility';
 import {ButtonStyles} from '../../../../types/button';
 import {ButtonCSS} from './buttonCSS';
 
@@ -7,14 +8,17 @@ interface MouseState {
   state: keyof StatefulStyles;
 }
 
-export class InputButton<T extends {[key: string]: ButtonStyles} = {}> {
-  readonly elementRef: HTMLElement;
+type Styles = {[key: string]: ButtonStyles};
+
+export class InputButton<T extends Styles = Styles> {
+  elementRef: HTMLElement;
   protected readonly _mouseState: MouseState = {state: 'default'};
   protected readonly _customStyles?: T;
   readonly position?: ButtonPositionT;
   readonly dropupText?: string;
 
   constructor(buttonElement: HTMLElement, position?: ButtonPositionT, customStyles?: T, dropupText?: string) {
+    ButtonAccessibility.addAttributes(buttonElement);
     this.elementRef = buttonElement;
     this._customStyles = customStyles;
     this.position = position;

@@ -3,19 +3,19 @@ import {StatefulEvents} from '../../../../utils/element/statefulEvents';
 import {StyleUtils} from '../../../../utils/element/styleUtils';
 import {HTMLDeepChatElements} from './htmlDeepChatElements';
 import {StatefulStyles} from '../../../../types/styles';
-import {Messages} from '../messages';
+import {MessagesBase} from '../messagesBase';
 
 export class HTMLUtils {
   public static applyStylesToElement(element: HTMLElement, styles: StatefulStyles) {
-    const statefulStyles = StyleUtils.processStateful(styles, {}, {});
+    const statefulStyles = StyleUtils.processStateful(styles);
     StatefulEvents.add(element, statefulStyles);
     Object.assign(element.style, statefulStyles.default);
   }
 
   private static applyEventsToElement(element: HTMLElement, events: EventToFunction) {
     Object.keys(events).forEach((event) => {
-      const eventFunction = events[event as keyof EventToFunction];
-      if (eventFunction) element.addEventListener(event as keyof EventToFunction, eventFunction as () => void);
+      const eventFunction = events[event];
+      if (eventFunction) element.addEventListener(event, eventFunction as () => void);
     });
   }
 
@@ -39,8 +39,44 @@ export class HTMLUtils {
     });
   }
 
-  public static apply(messages: Messages, outmostElement: HTMLElement) {
+  public static apply(messages: MessagesBase, outmostElement: HTMLElement) {
     HTMLDeepChatElements.applyDeepChatUtilities(messages, messages.htmlClassUtilities, outmostElement);
     HTMLUtils.applyCustomClassUtilities(messages.htmlClassUtilities, outmostElement);
+  }
+
+  private static traverseNodes(node: ChildNode, topLevelElements: string[]) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      topLevelElements.push((node as HTMLElement).outerHTML);
+    }
+    node.childNodes.forEach((childNode) => {
+      HTMLUtils.traverseNodes(childNode, topLevelElements);
+    });
+  }
+
+  public static splitHTML(htmlString: string) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
+    const topLevelElements: string[] = [];
+    doc.body.childNodes.forEach((childNode) => {
+      HTMLUtils.traverseNodes(childNode, topLevelElements);
+    });
+    return topLevelElements;
+  }
+
+  public static isTemporaryBasedOnHTML(html: string) {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    return HTMLDeepChatElements.isElementTemporary({
+      outerContainer: tempDiv,
+      bubbleElement: tempDiv,
+      innerContainer: tempDiv,
+    });
+  }
+
+  // useful for removing event listeners
+  public static replaceElementWithNewClone(oldElement: HTMLElement, elementToBeCloned?: HTMLElement) {
+    const newElement = (elementToBeCloned || oldElement).cloneNode(true) as HTMLElement;
+    oldElement.parentNode?.replaceChild(newElement, oldElement);
+    return newElement;
   }
 }

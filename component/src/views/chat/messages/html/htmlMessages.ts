@@ -1,44 +1,63 @@
-import {MessageContentI} from '../../../../types/messagesInternal';
-import {HTMLDeepChatElements} from './htmlDeepChatElements';
-import {MessageElements, Messages} from '../messages';
-import {MessageUtils} from '../messageUtils';
+import {Overwrite} from '../../../../types/messagesInternal';
+import {Legacy} from '../../../../utils/legacy/legacy';
+import {MessageUtils} from '../utils/messageUtils';
+import {MessagesBase} from '../messagesBase';
+import {MessageElements} from '../messages';
 import {HTMLUtils} from './htmlUtils';
 
 export class HTMLMessages {
-  private static addElement(messages: Messages, outerElement: HTMLElement) {
-    messages.elementRef.appendChild(outerElement);
-    messages.elementRef.scrollTop = messages.elementRef.scrollHeight;
+  public static readonly HTML_BUBBLE_CLASS = 'html-message';
+
+  private static addElement(messages: MessagesBase, outerElement: HTMLElement) {
+    messages.appendOuterContainerElemet(outerElement);
+    if (!messages.focusMode) messages.elementRef.scrollTop = messages.elementRef.scrollHeight;
   }
 
-  private static createElements(messages: Messages, html: string, role: string) {
-    const messageElements = messages.createNewMessageElement('', role);
-    messageElements.bubbleElement.classList.add('html-message');
+  public static createElements(messages: MessagesBase, html: string, role: string, isTop: boolean, loading = false) {
+    const messageElements = messages.createMessageElementsOnOrientation('', role, isTop, loading);
+    messageElements.bubbleElement.classList.add(HTMLMessages.HTML_BUBBLE_CLASS);
     messageElements.bubbleElement.innerHTML = html;
     return messageElements;
   }
 
-  // test when last element contains no html but text, should text be removed?
-  // prettier-ignore
-  private static updateLastAIMessage(messages: MessageContentI[], html: string, messagesElements: MessageElements[]) {
-    const lastElems = MessageUtils.getLastElementsByClass(
-      messagesElements, ['ai-message-text', 'html-message'], ['loading-message-text']);
-    if (!lastElems) return false;
-    if (lastElems) lastElems.bubbleElement.innerHTML = html;
-    const lastMessage = MessageUtils.getLastMessage(messages, true, 'html');
-    if (lastMessage) lastMessage.html = html;
-    return true;
+  public static overwriteElements(messages: MessagesBase, html: string, overwrittenElements: MessageElements) {
+    overwrittenElements.bubbleElement.innerHTML = html;
+    HTMLUtils.apply(messages, overwrittenElements.outerContainer);
+    Legacy.flagHTMLUpdateClass(overwrittenElements.bubbleElement);
   }
 
-  public static add(messages: Messages, html: string, role: string, messagesElements: MessageElements[]) {
-    if (HTMLDeepChatElements.isUpdateMessage(html)) {
-      const wasUpdated = HTMLMessages.updateLastAIMessage(messages.messages, html, messagesElements);
-      if (wasUpdated) return undefined;
+  // prettier-ignore
+  private static overwrite(messages: MessagesBase, html: string, role: string, messageElementRefs: MessageElements[]) {
+    const {messageToElements: msgToEls} = messages;
+    const overwrittenElements = MessageUtils.overwriteMessage(
+      msgToEls, messageElementRefs, html, role, 'html', HTMLMessages.HTML_BUBBLE_CLASS);
+    if (overwrittenElements) {
+      HTMLMessages.overwriteElements(messages, html, overwrittenElements);
     }
-    const messageElements = HTMLMessages.createElements(messages, html, role);
-    if (html.trim().length === 0) Messages.editEmptyMessageElement(messageElements.bubbleElement);
+    return overwrittenElements;
+  }
+
+  public static create(messages: MessagesBase, html: string, role: string, isTop = false) {
+    const messageElements = HTMLMessages.createElements(messages, html, role, isTop);
+    MessageUtils.fillEmptyMessageElement(messageElements.bubbleElement, html);
     HTMLUtils.apply(messages, messageElements.outerContainer);
+    Legacy.flagHTMLUpdateClass(messageElements.bubbleElement);
     messages.applyCustomStyles(messageElements, role, false, messages.messageStyles?.html);
-    HTMLMessages.addElement(messages, messageElements.outerContainer);
+    return messageElements;
+  }
+
+  public static add(messages: MessagesBase, html: string, role: string, overwrite?: Overwrite, isTop = false) {
+    if (overwrite?.status) {
+      const overwrittenElements = this.overwrite(messages, html, role, messages.messageElementRefs);
+      if (overwrittenElements) return overwrittenElements;
+      overwrite.status = false;
+    }
+    // if top history, temporary and there already are element refs, do not add message
+    if (isTop && messages.messageElementRefs.length > 0 && HTMLUtils.isTemporaryBasedOnHTML(html)) {
+      return;
+    }
+    const messageElements = HTMLMessages.create(messages, html, role, isTop);
+    if (!isTop) HTMLMessages.addElement(messages, messageElements.outerContainer);
     return messageElements;
   }
 }

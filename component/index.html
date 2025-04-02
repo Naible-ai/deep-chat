@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 
 <html>
   <head>
@@ -22,17 +22,17 @@
     <!-- Attributes can be set as strings either directly on the element (demo/textInput) or via a `setAttribute` method on its reference (introMessage).
       When passing JSON objects make sure that they are first correctly stringified (use the following tool https://jsonlint.com/), functions assigned
       to properties must not have external references and all regex values are properly escaped.
-      You can also pass values into the component via properties by using the element reference (initialMessages).
+      You can also pass values into the component via properties by using the element reference (history).
       -->
     <deep-chat id="chat-element" demo="true" textInput='{"placeholder":{"text": "Welcome to the demo!"}}'></deep-chat>
     <script type="module">
-      const chatElement = document.getElementById('chat-element');
+      const chatElementRef = document.getElementById('chat-element');
       // Setting value via a property (easiest way)
-      chatElement.initialMessages = [
+      chatElementRef.history = [
         {role: 'user', text: 'Hey, how are you today?'},
         {role: 'ai', text: 'I am doing very well!'},
       ];
-      chatElement.setAttribute(
+      chatElementRef.setAttribute(
         'introMessage',
         JSON.stringify({
           text: 'You are now running deep chat locally.',

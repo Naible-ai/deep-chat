@@ -4,6 +4,7 @@ import svelteLogo from '/img/svelteLogo.png';
 import reactLogo from '/img/reactLogo.png';
 import solidLogo from '/img/solidLogo.png';
 import nextLogo from '/img/nextLogo.png';
+import nuxtLogo from '/img/nuxtLogo.png';
 import vueLogo from '/img/vueLogo.png';
 import './createComponent.css';
 import React from 'react';
@@ -28,7 +29,7 @@ function Logos(props) {
       }`}
     >
       <div className="start-page-logo start-panel-logo">
-        <a href="https://codesandbox.io/s/deep-chat-react-vwh8ls?file=/src/App.tsx" target="_blank">
+        <a href="https://stackblitz.com/edit/deep-chat-react?file=src%2FApp.tsx" target="_blank">
           <img src={reactLogo} width="41" style={{paddingTop: 10}} />
         </a>
       </div>
@@ -43,18 +44,23 @@ function Logos(props) {
         </a>
       </div>
       <div className="start-page-logo start-panel-logo">
-        <a href="https://codesandbox.io/s/deep-chat-angular-mk2v62?file=/src/app/app.component.html" target="_blank">
+        <a href="https://stackblitz.com/edit/stackblitz-starters-7gygrp?file=src%2Fapp%2Fapp.component.ts" target="_blank">
           <img src={angularLogo} width="50" style={{paddingTop: 1}} />
         </a>
       </div>
       <div className="start-page-logo start-panel-logo">
-        <a href="https://codesandbox.io/p/sandbox/deep-chat-solidjs-nnx9nc?file=%2Fsrc%2FApp.tsx%3A1%2C1" target="_blank">
+        <a href="https://stackblitz.com/edit/deep-chat-solid?file=src%2FApp.tsx" target="_blank">
           <img src={solidLogo} width="40" style={{paddingTop: 8}} />
         </a>
       </div>
       <div className="start-page-logo start-panel-logo">
         <a href="https://github.com/OvidijusParsiunas/deep-chat/tree/main/example-servers/nextjs" target="_blank">
           <img src={nextLogo} width="37" style={{paddingTop: 9}} />
+        </a>
+      </div>
+      <div className="start-page-logo start-panel-logo">
+        <a href="https://stackblitz.com/edit/nuxt-starter-vwz6pg?file=app.vue" target="_blank">
+          <img src={nuxtLogo} width="37" style={{paddingTop: 9}} />
         </a>
       </div>
       <div className="start-page-logo start-panel-logo">

@@ -1,11 +1,15 @@
 import {KeyVerificationDetails} from '../../../types/keyVerificationDetails';
 import {ErrorMessages} from '../../../utils/errorMessages/errorMessages';
 import {OpenAIConverseResult} from '../../../types/openAIResult';
-import {Messages} from '../../../views/chat/messages/messages';
 import {RequestUtils} from '../../../utils/HTTP/requestUtils';
 import {ServiceIO} from '../../serviceIO';
 
 export class OpenAIUtils {
+  public static readonly FUNCTION_TOOL_RESP_ERROR =
+    'Response object must either be {response: string}[] for each individual function ' +
+    'or {text: string} for a direct response, see https://deepchat.dev/docs/directConnection/OpenAI#FunctionHandler.';
+  public static readonly FUNCTION_TOOL_RESP_ARR_ERROR = 'Arrays are not accepted in handler responses';
+
   public static buildHeaders(key: string) {
     return {
       Authorization: `Bearer ${key}`,
@@ -14,7 +18,7 @@ export class OpenAIUtils {
   }
 
   // prettier-ignore
-  private static handleVerificationResult(result: object, key: string,
+  public static handleVerificationResult(result: object, key: string,
       onSuccess: (key: string) => void, onFail: (message: string) => void) {
     const openAIResult = result as OpenAIConverseResult;
     if (openAIResult.error) {
@@ -36,37 +40,10 @@ export class OpenAIUtils {
     };
   }
 
-  public static async storeFiles(serviceIO: ServiceIO, messages: Messages, files: File[]) {
-    const headers = serviceIO.requestSettings.headers;
-    if (!headers) return;
-    serviceIO.url = `https://api.openai.com/v1/files`; // stores files
-    const previousContetType = headers[RequestUtils.CONTENT_TYPE];
-    delete headers[RequestUtils.CONTENT_TYPE];
-    const requests = files.map(async (file) => {
-      const formData = new FormData();
-      formData.append('purpose', 'assistants');
-      formData.append('file', file);
-      return new Promise<{id: string}>((resolve) => {
-        resolve(OpenAIUtils.directFetch(serviceIO, formData, 'POST', false)); // should perhaps use await but works without
-      });
-    });
-    try {
-      const fileIds = (await Promise.all(requests)).map((result) => result.id);
-      headers[RequestUtils.CONTENT_TYPE] = previousContetType;
-      return fileIds;
-    } catch (err) {
-      headers[RequestUtils.CONTENT_TYPE] = previousContetType;
-      // error handled here as files not sent using HTTPRequest.request to not trigger the interceptors
-      RequestUtils.displayError(messages, err as object);
-      serviceIO.completionsHandlers.onFinish();
-      throw err;
-    }
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public static async directFetch(serviceIO: ServiceIO, body: any, method: 'POST' | 'GET', stringify = true) {
-    serviceIO.requestSettings.method = method;
-    const result = await RequestUtils.fetch(serviceIO, serviceIO.requestSettings.headers, stringify, body).then((resp) =>
+    serviceIO.connectSettings.method = method;
+    const result = await RequestUtils.fetch(serviceIO, serviceIO.connectSettings.headers, stringify, body).then((resp) =>
       RequestUtils.processResponseByType(resp)
     );
     if (result.error) throw result.error.message;

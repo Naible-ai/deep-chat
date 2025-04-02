@@ -37,4 +37,20 @@ export class ObjectUtils {
       ObjectUtils.setPropertyValue(target, nestedKeys, newObject);
     }
   }
+
+  public static isJson(obj: object) {
+    try {
+      JSON.stringify(obj);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // prettier-ignore
+  public static assignPropertyFromOneToAnother<T extends object, K extends keyof T>(
+      key: K, target: T, source?: Partial<T>): void {
+    target[key] ??= {} as T[K];
+    Object.assign(target[key] as object, source?.[key]);
+  }
 }

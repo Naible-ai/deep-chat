@@ -69,6 +69,12 @@
   user-select: none;
 }
 
-.text-input-placeholder {
+[contenteditable]:empty:before {
+  /* Has to be an attribute to be accessed by contenteditable pseusod element and pseudo classes */
+  content: attr(deep-chat-placeholder-text);
+  pointer-events: none;
+}
+
+[contenteditable][textcolor]:empty:before {
   color: grey;
 }

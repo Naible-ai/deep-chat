@@ -1,28 +1,31 @@
-import {CustomButtonInnerElements} from '../buttons/customButtonInnerElements';
+import {PositionToButtons} from '../buttons/styleAdjustments/inputButtonPositions';
 import {GenericInputButtonStyles} from '../../../../types/genericInputButton';
-import {Positions} from '../buttons/styleAdjustments/inputButtonPositions';
 import {DefinedButtonStateStyles} from '../../../../types/buttonInternal';
+import {ButtonInnerElements} from '../buttons/buttonInnerElements';
 import {SVGIconUtils} from '../../../../utils/svg/svgIconUtils';
 import {DropupStyles} from '../../../../types/dropupStyles';
 import {PLUS_ICON_STRING} from '../../../../icons/plusIcon';
 import {InputButton} from '../buttons/inputButton';
 import {DropupMenu} from './dropupMenu';
+import {DropupItem} from './dropupItem';
 
 type Styles = DefinedButtonStateStyles<GenericInputButtonStyles>;
 
 export class Dropup extends InputButton<Styles> {
   private readonly _menu: DropupMenu;
+  public static BUTTON_ICON_CLASS = 'dropup-icon';
   readonly buttonContainer: HTMLElement;
 
   constructor(containerElement: HTMLElement, styles?: DropupStyles) {
-    super(Dropup.createButtonElement(), undefined, {styles: styles?.button?.styles} || {});
+    super(Dropup.createButtonElement(), undefined, {styles: styles?.button?.styles});
     const innerElements = this.createInnerElements(this._customStyles);
     this._menu = new DropupMenu(containerElement, styles?.menu);
     this.addClickEvent();
     this.buttonContainer = Dropup.createButtonContainer();
     this.elementRef.appendChild(innerElements.styles);
     this.buttonContainer.appendChild(this.elementRef);
-    this.elementRef.classList.add('dropup-icon', 'upload-file-button');
+    this.elementRef.classList.add(Dropup.BUTTON_ICON_CLASS, 'upload-file-button');
+    this.elementRef.children[0].id = 'dropup-icon';
     this.buttonContainer.appendChild(this._menu.elementRef);
     this.reapplyStateStyle('styles');
     this.addContainerEvents(containerElement);
@@ -41,12 +44,11 @@ export class Dropup extends InputButton<Styles> {
   }
 
   private createInnerElement(baseButton: SVGGraphicsElement, state: 'styles', customStyles?: Styles) {
-    return CustomButtonInnerElements.createSpecificStateElement(this.elementRef, state, customStyles) || baseButton;
+    return ButtonInnerElements.createSpecificStateElement(this.elementRef, state, customStyles) || baseButton;
   }
 
   private static createSVGIconElement() {
     const svgIconElement = SVGIconUtils.createSVGElement(PLUS_ICON_STRING);
-    svgIconElement.id = 'dropup-icon';
     return svgIconElement;
   }
 
@@ -66,15 +68,20 @@ export class Dropup extends InputButton<Styles> {
 
   private addContainerEvents(containerElement: HTMLElement) {
     containerElement.addEventListener('click', (event) => {
-      if (!(event.target as HTMLElement).classList.contains('dropup-icon')) this._menu.close();
+      const classes = (event.target as HTMLElement).classList;
+      if (!classes.contains(Dropup.BUTTON_ICON_CLASS) && !classes.contains(DropupItem.DISABLED_ITEM_CLASS)) {
+        this._menu.close();
+      }
     });
   }
 
-  static getPosition(positions: Positions, dropupStyles?: DropupStyles) {
+  static getPosition(pToBs: PositionToButtons, dropupStyles?: DropupStyles) {
     if (dropupStyles?.button?.position) {
       return dropupStyles?.button?.position;
     }
-    if (positions['outside-left'].length > 0 && positions['outside-right'].length === 0) return 'outside-right';
+    if (pToBs['outside-left'].length > 0 && pToBs['outside-right'].length === 0) {
+      return 'outside-right';
+    }
     return 'outside-left';
   }
 }

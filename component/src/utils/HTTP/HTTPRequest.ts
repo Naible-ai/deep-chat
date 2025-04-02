@@ -14,13 +14,13 @@ export type HandleVerificationResult = (
 export class HTTPRequest {
   // prettier-ignore
   public static async request(io: ServiceIO, body: object, messages: Messages, stringifyBody = true) {
-    const requestDetails: RequestDetails = {body, headers: io.requestSettings?.headers};
+    const requestDetails: RequestDetails = {body, headers: io.connectSettings?.headers};
     const {body: interceptedBody, headers, error} =
       (await RequestUtils.processRequestInterceptor(io.deepChat, requestDetails));
     const {onFinish} = io.completionsHandlers;
-    if (error) return HTTPRequest.onInterceptorError(messages, error, onFinish);
-    if (io.requestSettings?.handler) return CustomHandler.request(io, interceptedBody, messages);
-    if (io.requestSettings?.url === Demo.URL) return Demo.request(messages, onFinish, io.deepChat.responseInterceptor);
+    if (error) return RequestUtils.onInterceptorError(messages, error, onFinish);
+    if (io.connectSettings?.handler) return CustomHandler.request(io, interceptedBody, messages);
+    if (io.connectSettings?.url === Demo.URL) return Demo.request(io, messages);
     let responseValid = true;
     const fetchFunc = RequestUtils.fetch.bind(this, io, headers, stringifyBody);
     fetchFunc(interceptedBody).then((response) => {
@@ -34,13 +34,14 @@ export class HTTPRequest {
         const resultData = await io.extractResultData(finalResult, fetchFunc, interceptedBody);
         // the reason why throwing here is to allow extractResultData to attempt extract error message and throw it
         if (!responseValid) throw result;
-        if (!resultData || typeof resultData !== 'object')
+        if (!resultData || (typeof resultData !== 'object' && !Array.isArray(resultData)))
           throw Error(ErrorMessages.INVALID_RESPONSE(result, 'response', !!io.deepChat.responseInterceptor, finalResult));
         if (resultData.makingAnotherRequest) return;
-        if (io.deepChat.stream && resultData.text) {
+        if (Stream.isSimulatable(io.stream, resultData)) {
           Stream.simulate(messages, io.streamHandlers, resultData);
         } else {
-          messages.addNewMessage(resultData);
+          const messageDataArr = Array.isArray(resultData) ? resultData : [resultData];
+          messageDataArr.forEach((message) => messages.addNewMessage(message));
           onFinish();
         }
       })
@@ -51,7 +52,7 @@ export class HTTPRequest {
   }
 
   public static executePollRequest(io: ServiceIO, url: string, requestInit: RequestInit, messages: Messages) {
-    console.log('polling');
+    // console.log('polling');
     const {onFinish} = io.completionsHandlers;
     fetch(url, requestInit)
       .then((response) => response.json())
@@ -63,8 +64,8 @@ export class HTTPRequest {
             HTTPRequest.executePollRequest(io, url, requestInit, messages);
           }, resultData.timeoutMS);
         } else {
-          console.log('finished polling');
-          if (io.deepChat.stream && resultData.text) {
+          // console.log('finished polling');
+          if (Stream.isSimulatable(io.stream, resultData)) {
             Stream.simulate(messages, io.streamHandlers, resultData);
           } else {
             messages.addNewMessage(resultData);
@@ -80,20 +81,16 @@ export class HTTPRequest {
 
   // prettier-ignore
   public static async poll(io: ServiceIO, body: object, messages: Messages, stringifyBody = true) {
-    const requestDetails = {body, headers: io.requestSettings?.headers};
+    const requestDetails = {body, headers: io.connectSettings?.headers};
     const {body: interceptedBody, headers, error} =
       (await RequestUtils.processRequestInterceptor(io.deepChat, requestDetails));
-    if (error) return HTTPRequest.onInterceptorError(messages, error);
-    const url = io.requestSettings?.url || io.url || '';
-    const method = io.requestSettings?.method || 'POST';
+    if (error) return RequestUtils.onInterceptorError(messages, error);
+    const url = io.connectSettings?.url || io.url || '';
+    const method = io.connectSettings?.method || 'POST';
     const requestBody = stringifyBody ? JSON.stringify(interceptedBody) : interceptedBody;
-    const requestInit = {method, body: requestBody, headers};
+    const requestInit: RequestInit = {method, body: requestBody, headers};
+    if (io.connectSettings.credentials) requestInit.credentials = io.connectSettings.credentials; 
     HTTPRequest.executePollRequest(io, url, requestInit, messages);
-  }
-
-  private static onInterceptorError(messages: Messages, error: string, onFinish?: () => void) {
-    messages.addNewErrorMessage('service', error);
-    onFinish?.();
   }
 
   // prettier-ignore

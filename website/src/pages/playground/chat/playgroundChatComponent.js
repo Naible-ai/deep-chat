@@ -11,21 +11,25 @@ export default function ChatComponent({config}) {
 
   // updating messages here to keep track of them so that when user moves to a different page they can be added to config
   // to note componentRef.current will be undefined, hence need to keep track
-  function newestMessages({isInitial}) {
-    if (!isInitial) {
+  function onMessage({isHistory}) {
+    if (!isHistory) {
+      const deepChatComponent = componentRef.current.children[0];
+      if (config.connect?.openAI?.assistant) assignOpenAIAssistantId(deepChatComponent, config);
       const {messages} = config;
       messages.splice(0, messages.length);
-      messages.push(...componentRef.current.children[0].getMessages());
+      messages.push(...deepChatComponent.getMessages());
     }
   }
 
-  function clearMessages() {
+  function onClearMessages() {
     config?.messages.splice(0, config.messages.length);
   }
 
   function getBoolean(object, name) {
     if (object[name]) {
-      return object[name];
+      const resultBoolean = object[name];
+      delete object[name]; // deleting as directConnection services use property in requests
+      return resultBoolean;
     }
     const firstKey = Object.keys(object)[0] === 'key' ? Object.keys(object)[1] : Object.keys(object)[0];
     if (typeof object[firstKey] === 'object') {
@@ -34,30 +38,49 @@ export default function ChatComponent({config}) {
     return false;
   }
 
+  function parseConfigProperties(config) {
+    if (!config?.connect) return {connect: config?.connect};
+    const connectCp = JSON.parse(JSON.stringify(config.connect));
+    const allowImages = getBoolean(connectCp, 'allowImages');
+    const allowCamera = getBoolean(connectCp, 'allowCamera');
+    const allowGifs = getBoolean(connectCp, 'allowGifs');
+    const allowAudio = getBoolean(connectCp, 'allowAudio');
+    const allowMicrophone = getBoolean(connectCp, 'allowMicrophone');
+    const allowMixedFiles = getBoolean(connectCp, 'allowMixedFiles');
+    return {connect: connectCp, allowImages, allowCamera, allowGifs, allowAudio, allowMicrophone, allowMixedFiles};
+  }
+
+  function getWebModelConfig(webModelConfig) {
+    const defaultConfig = {load: {onMessage: true}};
+    const customConfig = typeof webModelConfig === 'boolean' ? {} : webModelConfig;
+    return Object.assign(defaultConfig, customConfig);
+  }
+
   return (
     <BrowserOnly>
       {() => {
         // colorMode tracked in in wrapper because component would otherwise
         // not update properly as styles overwrite each other
         const {colorMode} = useColorMode();
-
+        const {connect, allowImages, allowCamera, allowGifs, allowAudio, allowMicrophone, allowMixedFiles} =
+          parseConfigProperties(config);
         if (colorMode === 'dark') {
           return (
             <div ref={componentRef} className="playground-chat-component">
               {config?.connect?.custom ? (
                 <DeepChatBrowser
-                  request={config.connect.custom}
-                  images={getBoolean(config.connect, 'allowImages')}
-                  camera={getBoolean(config.connect, 'allowCamera')}
-                  gifs={getBoolean(config.connect, 'allowGifs')}
-                  audio={getBoolean(config.connect, 'allowAudio')}
-                  microphone={getBoolean(config.connect, 'allowMicrophone')}
-                  mixedFiles={getBoolean(config.connect, 'allowMixedFiles')}
+                  connect={connect.custom}
+                  images={allowImages}
+                  camera={allowCamera}
+                  gifs={allowGifs}
+                  audio={allowAudio}
+                  microphone={allowMicrophone}
+                  mixedFiles={allowMixedFiles}
                   style={darkContainerStyle}
                   messageStyles={darkMessageStyles}
-                  initialMessages={config.messages}
-                  onNewMessage={newestMessages}
-                  onClearMessages={clearMessages}
+                  history={config.messages}
+                  onMessage={onMessage}
+                  onClearMessages={onClearMessages}
                   textInput={darkTextInput}
                   submitButtonStyles={darkButtonStyles}
                   auxiliaryStyle={darkAuxiliaryStyle}
@@ -68,28 +91,37 @@ export default function ChatComponent({config}) {
                   demo={DEMO_RESPONSE}
                   style={darkContainerStyle}
                   messageStyles={darkMessageStyles}
-                  initialMessages={config.messages}
-                  onNewMessage={newestMessages}
-                  onClearMessages={clearMessages}
+                  history={config.messages}
+                  onMessage={onMessage}
+                  onClearMessages={onClearMessages}
                   textInput={darkTextInput}
                   submitButtonStyles={darkButtonStyles}
                   auxiliaryStyle={darkAuxiliaryStyle}
                   introPanelStyle={darkPanelStyle}
                 ></DeepChatBrowser>
-              ) : (
+              ) : config?.connect?.webModel ? (
                 <DeepChatBrowser
-                  directConnection={config.connect}
-                  images={getBoolean(config.connect, 'allowImages')}
-                  camera={getBoolean(config.connect, 'allowCamera')}
-                  gifs={getBoolean(config.connect, 'allowGifs')}
-                  audio={getBoolean(config.connect, 'allowAudio')}
-                  microphone={getBoolean(config.connect, 'allowMicrophone')}
-                  mixedFiles={getBoolean(config.connect, 'allowMixedFiles')}
+                  webModel={getWebModelConfig(config.connect.webModel)}
                   style={darkContainerStyle}
                   messageStyles={darkMessageStyles}
-                  initialMessages={config.messages}
-                  onNewMessage={newestMessages}
-                  onClearMessages={clearMessages}
+                  history={config.messages}
+                  onMessage={onMessage}
+                  onClearMessages={onClearMessages}
+                ></DeepChatBrowser>
+              ) : (
+                <DeepChatBrowser
+                  directConnection={connect}
+                  images={allowImages}
+                  camera={allowCamera}
+                  gifs={allowGifs}
+                  audio={allowAudio}
+                  microphone={allowMicrophone}
+                  mixedFiles={allowMixedFiles}
+                  style={darkContainerStyle}
+                  messageStyles={darkMessageStyles}
+                  history={config.messages}
+                  onMessage={onMessage}
+                  onClearMessages={onClearMessages}
                   textInput={darkTextInput}
                   submitButtonStyles={darkButtonStyles}
                   auxiliaryStyle={darkAuxiliaryStyle}
@@ -104,39 +136,47 @@ export default function ChatComponent({config}) {
           <div ref={componentRef} className="playground-chat-component">
             {config?.connect?.custom ? (
               <DeepChatBrowser
-                request={config.connect.custom}
-                images={getBoolean(config.connect, 'allowImages')}
-                camera={getBoolean(config.connect, 'allowCamera')}
-                gifs={getBoolean(config.connect, 'allowGifs')}
-                audio={getBoolean(config.connect, 'allowAudio')}
-                microphone={getBoolean(config.connect, 'allowMicrophone')}
-                mixedFiles={getBoolean(config.connect, 'allowMixedFiles')}
+                connect={connect.custom}
+                images={allowImages}
+                camera={allowCamera}
+                gifs={allowGifs}
+                audio={allowAudio}
+                microphone={allowMicrophone}
+                mixedFiles={allowMixedFiles}
                 style={lightContainerStyle}
-                initialMessages={config.messages}
-                onNewMessage={newestMessages}
-                onClearMessages={clearMessages}
+                history={config.messages}
+                onMessage={onMessage}
+                onClearMessages={onClearMessages}
               ></DeepChatBrowser>
             ) : config?.connect?.demo ? (
               <DeepChatBrowser
                 demo={DEMO_RESPONSE}
                 style={lightContainerStyle}
-                initialMessages={config.messages}
-                onNewMessage={newestMessages}
-                onClearMessages={clearMessages}
+                history={config.messages}
+                onMessage={onMessage}
+                onClearMessages={onClearMessages}
+              ></DeepChatBrowser>
+            ) : config?.connect?.webModel ? (
+              <DeepChatBrowser
+                webModel={getWebModelConfig(config.connect.webModel)}
+                style={lightContainerStyle}
+                history={config.messages}
+                onMessage={onMessage}
+                onClearMessages={onClearMessages}
               ></DeepChatBrowser>
             ) : (
               <DeepChatBrowser
-                directConnection={config.connect}
-                images={getBoolean(config.connect, 'allowImages')}
-                camera={getBoolean(config.connect, 'allowCamera')}
-                gifs={getBoolean(config.connect, 'allowGifs')}
-                audio={getBoolean(config.connect, 'allowAudio')}
-                microphone={getBoolean(config.connect, 'allowMicrophone')}
-                mixedFiles={getBoolean(config.connect, 'allowMixedFiles')}
+                directConnection={connect}
+                images={allowImages}
+                camera={allowCamera}
+                gifs={allowGifs}
+                audio={allowAudio}
+                microphone={allowMicrophone}
+                mixedFiles={allowMixedFiles}
                 style={lightContainerStyle}
-                initialMessages={config.messages}
-                onNewMessage={newestMessages}
-                onClearMessages={clearMessages}
+                history={config.messages}
+                onMessage={onMessage}
+                onClearMessages={onClearMessages}
               ></DeepChatBrowser>
             )}
           </div>
@@ -216,3 +256,13 @@ const lightContainerStyle = {
   marginRight: '10px',
   width: '302px',
 };
+
+function assignOpenAIAssistantId(deepChatComponent, config) {
+  if (deepChatComponent._activeService.rawBody.assistant_id) {
+    if (typeof config.connect.openAI.assistant === 'boolean') {
+      config.connect.openAI.assistant = {assistant_id: deepChatComponent._activeService.rawBody.assistant_id};
+    } else if (!config.connect.openAI.assistant.assistant_id) {
+      config.connect.openAI.assistant.assistant_id = deepChatComponent._activeService.rawBody.assistant_id;
+    }
+  }
+}

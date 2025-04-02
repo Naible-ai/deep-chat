@@ -18,6 +18,7 @@
 - Introduction panel and dynamic modals to help describe functionality for your users
 - Connect to popular AI APIs such as OpenAI, HuggingFace, Cohere directly from the browser
 - Support for all major ui frameworks/libraries
+- Host a model on the browser
 - Everything is customizable!
 
 ### :computer: Getting started
@@ -32,7 +33,7 @@ If using React, install the [following](https://www.npmjs.com/package/deep-chat-
 npm install deep-chat-react
 ```
 
-To test the component - simply add the following to your markup:
+Simply add the following to your markup:
 
 ```
 <deep-chat></deep-chat>
@@ -44,10 +45,10 @@ The exact syntax for the above example will vary depending on the framework of y
 
 ![Connect](https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/assets/readme/connect.png)
 
-Connecting to a service is simple, all you need to do is define its API details using the [`request`](https://deepchat.dev/docs/connect#request) property:
+Connecting to a service is simple, all you need to do is define its API details using the [`connect`](https://deepchat.dev/docs/connect#connect-1) property:
 
 ```
-<deep-chat request='{"url":"https://service.com/chat"}'/>
+<deep-chat connect='{"url":"https://service.com/chat"}'/>
 ```
 
 The service will need to be able to handle request and response formats used in Deep Chat. Please read the [Connect](https://deepchat.dev/docs/connect) section in documentation and check out the [server template](https://deepchat.dev/examples/servers) examples.
@@ -66,10 +67,22 @@ Connect to popular AI APIs directly from the browser via the use of the [`direct
 <deep-chat directConnection='{"openAI":{"key": "optional-key-here"}}'/>
 ```
 
-Please note that this approach should be used for local/prototyping/demo purposes ONLY as it exposes the API Key to the browser. When ready to go live, please switch to using the [`request`](https://deepchat.dev/docs/connect#request) property described above along with a [proxy service](https://github.com/OvidijusParsiunas/deep-chat/tree/main/example-servers).
+Please note that this approach should be used for local/prototyping/demo purposes ONLY as it exposes the API Key to the browser. When ready to go live, please switch to using the [`connect`](https://deepchat.dev/docs/connect#connect-1) property described above along with a [proxy service](https://github.com/OvidijusParsiunas/deep-chat/tree/main/example-servers).
 
 Currently supported direct API connections:
-[OpenAI](https://openai.com/blog/openai-api), [HuggingFace](https://learn.microsoft.com/en-gb/azure/cognitive-services/), [Cohere](https://docs.cohere.com/docs), [Stability AI](https://stability.ai/), [Azure](https://learn.microsoft.com/en-gb/azure/cognitive-services/), [AssemblyAI](https://www.assemblyai.com/)
+[OpenAI](https://openai.com/blog/openai-api), [HuggingFace](https://huggingface.co/docs/api-inference/index), [Cohere](https://docs.cohere.com/docs), [Stability AI](https://stability.ai/), [Azure](https://learn.microsoft.com/en-gb/azure/cognitive-services/), [AssemblyAI](https://www.assemblyai.com/)
+
+### :robot: Web model
+
+![Web Model](https://github.com/OvidijusParsiunas/deep-chat/assets/18709577/83936e6f-d0c1-42b7-ab61-ac75d7803660)
+
+No servers, no connections, host an LLM model entirely on your browser.
+
+Simply add the [deep-chat-web-llm](https://deepchat.dev/examples/externalModules) module and define the [webModel](https://deepchat.dev/docs/webModel) property:
+
+```
+<deep-chat webModel="true" />
+```
 
 ### :camera: :microphone: Camera and Microphone
 
@@ -95,9 +108,9 @@ Input text with your voice using Speech To Text capabilities and have the respon
 
 Check out live codepen examples for your [UI framework/library](https://deepchat.dev/examples/frameworks) of choice:
 
-| React                                                                                                                                                                                                                       | Vue 2                                                                                                                                                                                                                    | Vue 3                                                                                                                                                                                                                    | Svelte                                                                                                                                                                                                                       | SvelteKit                                                                                                                                                                                                                                         | Angular                                                                                                                                                                                                                                        | Solid                                                                                                                                                                                                                                             | Next                                                                                                                                                                                                                                                                                                                                                                              | VanillaJS                                                                                                                                                                                                                          |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| <a href="https://codesandbox.io/s/deep-chat-react-vwh8ls?file=/src/App.tsx" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/reactLogo.png" width="60"/></a> | <a href="https://codesandbox.io/s/deep-chat-vue2-cdqpt2?file=/src/App.vue" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/vueLogo.png" width="60"/></a> | <a href="https://codesandbox.io/s/deep-chat-vue3-7y99jq?file=/src/App.vue" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/vueLogo.png" width="60"/></a> | <a href="https://codesandbox.io/s/deep-chat-svelte-832jcc?file=/App.svelte" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/svelteLogo.png" width="45"/></a> | <div align="center"><a href="https://codesandbox.io/p/sandbox/deep-chat-sveltekit-fn8h6x" target="_blank" ><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/svelteLogo.png" width="45"/></a></div> | <a href="https://codesandbox.io/s/deep-chat-angular-mk2v62?file=/src/app/app.component.html" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/angularLogo.png" width="66"/></a> | <a href="https://codesandbox.io/p/sandbox/deep-chat-solidjs-nnx9nc?file=%2Fsrc%2FApp.tsx%3A1%2C1" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/solidLogo.png" width="60"/></a> | <a href="https://codesandbox.io/p/sandbox/deep-chat-nextjs-pvyy5p?selection=%5B%7B%22endColumn%22%3A30%2C%22endLineNumber%22%3A28%2C%22startColumn%22%3A30%2C%22startLineNumber%22%3A28%7D%5D&file=%2Fpages%2Findex.tsx%3A13%2C30" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/nextLogo.png" width="60"/></a> | <a href="https://codesandbox.io/s/deep-chat-vanillajs-v2ywnv?file=/index.html" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/vanillaJSLogo.png" width="60"/></a> |
+| React                                                                                                                                                                                                                    | Vue 2                                                                                                                                                                                                                    | Vue 3                                                                                                                                                                                                                 | Svelte                                                                                                                                                                                                                        | SvelteKit                                                                                                                                                                                                                                                                | Angular                                                                                                                                                                                                                                              | Solid                                                                                                                                                                                                                    | Next                                                                                                                                                                                                   | Nuxt                                                                                                                                                                                                                  | VanillaJS                                                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <a href="https://stackblitz.com/edit/deep-chat-react?file=src%2FApp.tsx" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/reactLogo.png" width="60"/></a> | <a href="https://codesandbox.io/s/deep-chat-vue2-cdqpt2?file=/src/App.vue" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/vueLogo.png" width="60"/></a> | <a href="https://stackblitz.com/edit/deep-chat-vue3?file=src%2FApp.vue" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/vueLogo.png" width="60"/></a> | <a href="https://stackblitz.com/edit/deep-chat-svelte?file=src%2FApp.svelte" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/svelteLogo.png" width="45"/></a> | <div align="center"><a href="https://stackblitz.com/edit/deep-chat-sveltekit?file=src%2Froutes%2F%2Bpage.svelte" target="_blank" ><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/svelteLogo.png" width="45"/></a></div> | <a href="https://stackblitz.com/edit/stackblitz-starters-7gygrp?file=src%2Fapp%2Fapp.component.ts" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/angularLogo.png" width="66"/></a> | <a href="https://stackblitz.com/edit/deep-chat-solid?file=src%2FApp.tsx" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/solidLogo.png" width="60"/></a> | <a href="https://deepchat.dev/examples/frameworks#next" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/nextLogo.png" width="60"/></a> | <a href="https://stackblitz.com/edit/nuxt-starter-vwz6pg?file=app.vue" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/nuxtLogo.png" width="70"/></a> | <a href="https://codesandbox.io/s/deep-chat-vanillajs-v2ywnv?file=/index.html" target="_blank"><img src="https://raw.githubusercontent.com/OvidijusParsiunas/deep-chat/HEAD/website/static/img/vanillaJSLogo.png" width="60"/></a> |
 
 Setting up your own server has never been easier with the following [server templates](https://deepchat.dev/examples/servers). From creating your own service to establishing proxies for other APIs such as OpenAI, everything has been documented with clear examples to get you up and running in seconds:
 
@@ -109,7 +122,7 @@ All examples are ready to be deployed on a hosting platform such as [Vercel](htt
 
 ## :tv: Tutorials
 
-Demo videos ara available on [YouTube](https://www.youtube.com/@ovi-il4rg/videos):
+Demo videos are available on [YouTube](https://www.youtube.com/@ovi-il4rg/videos):
 
 <p align="center">
     <a href="https://www.youtube.com/@ovi-il4rg/videos">
@@ -138,6 +151,24 @@ $ npm run start
 # Bundle the component into a single file (dist/deepChat.bundle.js):
 $ npm run build:bundle
 ```
+
+## :star2: Sponsors
+
+Thankyou to our generous sponsors!
+
+<p align="center">
+    &nbsp; &nbsp; 
+    <img src="https://github.com/dorra.png" width="110px"/>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  
+    <img src="https://github.com/techpeace.png" width="110px" />
+</p>
+<p align="center">
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+    <a href="https://github.com/dorra">dorra</a>
+    &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; 
+    <a href="https://github.com/techpeace">techpeace</a>
+     &nbsp;
+</p>
 
 ## :heart: Contributions
 

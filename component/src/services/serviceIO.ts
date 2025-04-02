@@ -3,10 +3,11 @@ import {IWebsocketHandler} from '../utils/HTTP/customHandler';
 import {Messages} from '../views/chat/messages/messages';
 import {InterfacesUnion} from '../types/utilityTypes';
 import {FetchFunc} from '../utils/HTTP/requestUtils';
-import {FILE_TYPES} from '../types/fileTypes';
+import {FILE_TYPE} from '../types/fileTypes';
 import {Response} from '../types/response';
-import {Request} from '../types/request';
+import {Connect} from '../types/connect';
 import {Signals} from '../types/handler';
+import {Stream} from '../types/stream';
 import {DeepChat} from '../deepChat';
 import {Demo} from '../types/demo';
 
@@ -40,17 +41,17 @@ export type FileServiceIO = FilesServiceConfig & {infoModalTextMarkUp?: string};
 export type CustomErrors = string[];
 
 export type ServiceFileTypes = {
-  [key in FILE_TYPES]?: FileServiceIO;
+  [key in FILE_TYPE]?: FileServiceIO;
 };
 
 export interface ServiceIO {
   key?: string;
 
-  validateConfigKey: boolean;
+  validateKeyProperty: boolean;
 
   insertKeyPlaceholderText?: string;
 
-  getKeyLink?: string;
+  keyHelpUrl?: string;
 
   url?: string;
 
@@ -74,11 +75,11 @@ export interface ServiceIO {
 
   recordAudio?: MicrophoneFilesServiceConfig;
 
-  requestSettings: Request;
+  connectSettings: Connect;
 
   introPanelMarkUp?: string;
 
-  // the reason why we use a Set of prefixes to allow certain errors is because some errors can change
+  // the reason why we use a set of prefixes to allow certain errors is because some errors can change
   // depending on the input e.g. incorrect image dimensions or formatting, hence we identify the permitted
   // service errors via prefixes
   permittedErrorPrefixes?: CustomErrors;
@@ -99,11 +100,22 @@ export interface ServiceIO {
 
   demo?: Demo;
 
-  deepChat: DeepChat; // this is used for interceptors as the user may pass them much later after component is initiated
+  stream?: Stream;
+
+  deepChat: DeepChat;
 
   isDirectConnection(): boolean;
+
+  isWebModel(): boolean;
+
+  isCustomView(): boolean;
 
   isSubmitProgrammaticallyDisabled?: boolean;
 
   sessionId?: string;
+
+  fetchHistory?: () => Promise<Response[]> | Response[];
+
+  // mostly used for streaming to not close the stream when it makes another request
+  asyncCallInProgress?: boolean;
 }

@@ -8,11 +8,11 @@ import React from 'react';
 
 // The wrapper is used to manipulate the css without re-rendering the actual chat component by storing it inside children
 const ChatWrapper = React.forwardRef(
-  ({children, config, removeComponent, cloneComponent, setEditingChatRef, isAtEnd, playgroundConfig}, ref) => {
+  ({children, config, removeComponent, cloneComponent, setEditingChatRef, isAtEnd}, ref) => {
     React.useImperativeHandle(ref, () => ({
       update() {
         setCounter(counter + 1);
-        config.messages.splice(0, config.messages.length); // these are initial messages from the config, remove when changing connection object
+        config.messages.splice(0, config.messages.length); // these are history messages from the config, remove when changing connection object
         if (!descriptionRef.current.getDirty()) {
           setDescriptionText(getDescription(config.connect));
         }
@@ -158,7 +158,7 @@ function isChildElementVisible(parentElement, childElement) {
 
 function getDescription(connect) {
   const service = Object.keys(connect)[0];
-  if (service === 'custom') {
+  if (service === 'custom' || service === 'webModel') {
     return SERVICE_TO_NAME[service];
   }
   const keys = Object.keys(connect[service]);
@@ -168,6 +168,7 @@ function getDescription(connect) {
 const SERVICE_TO_NAME = {
   demo: 'Default',
   custom: 'Service',
+  webModel: 'Web Model',
   openAI: {
     chat: 'OpenAI: Chat',
     assistant: 'OpenAI: Assistant',

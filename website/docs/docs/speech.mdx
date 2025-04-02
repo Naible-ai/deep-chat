@@ -1,5 +1,5 @@
 ---
-sidebar_position: 6
+sidebar_position: 7
 ---
 
 import azureCredentials from '/img/azure-credentials.png';
@@ -12,13 +12,13 @@ import azureCredentials from '/img/azure-credentials.png';
 
 ### `textToSpeech` {#textToSpeech}
 
-- Type: `true` | {<br />
+- Type: `true` | \{<br />
   &nbsp;&nbsp;&nbsp;&nbsp; `voiceName?: string`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `lang?: string`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `pitch?: number`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `rate?: string`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `volume?: number` <br />
-  }
+  \}
 
 When the chat receives a new text message - your device will automatically read it out. <br />
 `voiceName` is the name of the voice that will be used to read out the incoming message. Please note that different Operating Systems
@@ -61,7 +61,7 @@ import Tabs from '@theme/Tabs';
 <TabItem value="js" label="Sample code">
 
 ```html
-<deep-chat textToSpeech='{"volume": "0.9"}'></deep-chat>
+<deep-chat textToSpeech='{"volume": 0.9}'></deep-chat>
 ```
 
 </TabItem>
@@ -71,7 +71,7 @@ import Tabs from '@theme/Tabs';
 <!-- This example is for Vanilla JS and should be tailored to your framework (see Examples) -->
 
 <deep-chat
-  textToSpeech='{"volume": "0.9"}'
+  textToSpeech='{"volume": 0.9}'
   introMessage='{"text": "Send a message to hear the response."}'
   style="border-radius: 8px"
   demo="true"
@@ -85,17 +85,20 @@ import Tabs from '@theme/Tabs';
 
 ### `speechToText` {#speechToText}
 
-- Type: `true` | {<br />
+- Type: `true` | \{<br />
   &nbsp;&nbsp;&nbsp;&nbsp; `webSpeech?:` `true` | [`WebSpeechOptions`](#WebSpeechOptions), <br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`azure?: AzureOptions`](#AzureOptions), <br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`textColor?: TextColor`](#TextColor), <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `displayInterimResults?: boolean`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `translations?: {[key: string]: string}`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; [`commands?: Commands`](#Commands), <br />
-  &nbsp;&nbsp;&nbsp;&nbsp; [`button?: ButtonStyles`](#ButtonStyles) <br />
-  }
+  &nbsp;&nbsp;&nbsp;&nbsp; [`button?: ButtonStyles`](#ButtonStyles), <br />
+  &nbsp;&nbsp;&nbsp;&nbsp; `stopAfterSubmit?: boolean`, <br />
+  &nbsp;&nbsp;&nbsp;&nbsp; [`submitAfterSilence?: SubmitAfterSilence`](#SubmitAfterSilence), <br />
+  &nbsp;&nbsp;&nbsp;&nbsp; [`events?: SpeechEvents`](#SpeechEvents) <br />
+  \}
 
-- Default: _{webSpeech: true}_
+- Default: _\{webSpeech: true, stopAfterSubmit: true\}_
 
 Transcribe your voice into text and control chat with commands.<br />
 `webSpeech` utilises [`Web Speech API`](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API/Using_the_Web_Speech_API) to transcribe your speech. <br />
@@ -104,7 +107,10 @@ Transcribe your voice into text and control chat with commands.<br />
 `displayInterimResults` controls whether interim results are displayed. <br />
 `translations` is a case-sensitive one-to-one mapping of words that will automatically be translated to others. <br />
 `commands` is used to set the phrases that will trigger various chat functionality. <br />
-`button` defines the styling used for the microphone button.
+`button` defines the styling used for the microphone button. <br />
+`stopAfterSubmit` is used to toggle whether the recording stops after a message has been submitted. <br />
+`submitAfterSilence` configures automated message submit functionality when the user stops speaking. <br />
+`events` is used to listen to speech functionality events. <br />
 
 <div className="web-speech-not-supported-error">
   <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API/Using_the_Web_Speech_API">Web Speech API</a> is
@@ -186,7 +192,7 @@ Object types for [`speechToText`](#speechToText):
 
 ### `WebSpeechOptions` {#WebSpeechOptions}
 
-- Type: {`language?: string`}
+- Type: \{`language?: string`\}
 
 `language` is used to set the recognition language. See the following [`QA`](https://stackoverflow.com/questions/23733537/what-are-the-supported-languages-for-web-speech-api-in-html5)
 for the full list.
@@ -239,16 +245,16 @@ This service stops after a brief period of silence due to limitations in its API
 
 ### `AzureOptions` {#AzureOptions}
 
-- Type: {<br />
+- Type: \{<br />
   &nbsp;&nbsp;&nbsp;&nbsp; `region: string`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `retrieveToken?: () => Promise<string>`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `subscriptionKey?: string`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `token?: string`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `language?: string`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `stopAfterSilenceMs?: number` <br />
-  }
+  \}
 
-- Default: _{stopAfterSilenceMs: 25000 (25 seconds)}_
+- Default: _\{stopAfterSilenceMs: 25000 (25 seconds)\}_
 
 This object requires `region` and either `retrieveToken`, `subscriptionKey` or the `token` properties to be defined with it: <br />
 `region` is the location/region of your Azure speech resource. <br />
@@ -397,7 +403,7 @@ speechToText.speechToText = {
 
 ### `TextColor` {#TextColor}
 
-- Type: {`interim?: string`, `final?: string`}
+- Type: \{`interim?: string`, `final?: string`\}
 
 This object is used to set the color of `interim` and `final` results text. <br />
 
@@ -406,7 +412,7 @@ This object is used to set the color of `interim` and `final` results text. <br 
 <ComponentContainer>
   <DeepChatBrowser
     demo={true}
-    introMessage={{text: 'Send a message to hear the response.'}}
+    introMessage={{text: 'Click the microphone to start transcribing your speech.'}}
     style={{borderRadius: '8px'}}
     speechToText={{textColor: {interim: 'green', final: 'blue'}}}
   ></DeepChatBrowser>
@@ -427,7 +433,7 @@ This object is used to set the color of `interim` and `final` results text. <br 
 
 <deep-chat
   speechToText='{"textColor": {"interim": "green", "final": "blue"}}'
-  introMessage='{"text": "Send a message to hear the response."}'
+  introMessage='{"text": "Click the microphone to start transcribing your speech."}'
   style="border-radius: 8px"
   demo="true"
 ></deep-chat>
@@ -440,17 +446,17 @@ This object is used to set the color of `interim` and `final` results text. <br 
 
 ### `Commands` {#Commands}
 
-- Type: {<br />
+- Type: \{<br />
   &nbsp;&nbsp;&nbsp;&nbsp; `stop?: string`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `pause?: string`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `resume?: string`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `removeAllText?: string`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `submit?: string`, <br />
   &nbsp;&nbsp;&nbsp;&nbsp; `commandMode?: string`, <br />
-  &nbsp;&nbsp;&nbsp;&nbsp; `settings?:` {`substrings?: boolean`, `caseSensitive?: boolean`} <br />
-  }
+  &nbsp;&nbsp;&nbsp;&nbsp; `settings?:` \{`substrings?: boolean`, `caseSensitive?: boolean`\} <br />
+  \}
 
-- Default: _{settings: {substrings: true, caseSensitive: false}}_
+- Default: _\{settings: \{substrings: true, caseSensitive: false\}\}_
 
 This object is used to set the phrases which will control chat functionality via speech. <br />
 `stop` is used to stop the speech service. <br />
@@ -542,7 +548,7 @@ your speech as "Stop" it will not execute your command. On the other hand if it 
 
 ### `ButtonStyles` {#ButtonStyles}
 
-- Type: {[`commandMode?: ButtonStyles`](/docs/styles/#ButtonStyles), [`MicrophoneStyles`](/docs/styles/#MicrophoneStyles)}
+- Type: \{[`commandMode?: ButtonStyles`](/docs/styles/#ButtonStyles), [`MicrophoneStyles`](/docs/styles/#MicrophoneStyles)\}
 
 This object is used to define the styling for the microphone button. <br />
 It contains the same properties as the [`MicrophoneStyles`](/docs/styles/#MicrophoneStyles) object
@@ -685,6 +691,113 @@ You can use the [`CSSFilterConverter`](https://cssfilterconverter.com/) tool to 
 :::
 
 <LineBreak></LineBreak>
+
+### `SubmitAfterSilence` {#SubmitAfterSilence}
+
+- Type: `true` | `number`
+
+Automatically submit the input message after a period of silence. <br />
+This property accepts the value of _true_ or a number which represents the milliseconds of silence
+required to wait before a messaget is submitted. If this is set to _true_ the default milliseconds is _2000_. <br />
+
+#### Example
+
+<ComponentContainer>
+  <DeepChatBrowser
+    demo={true}
+    introMessage={{text: 'Click the microphone to start transcribing your speech.'}}
+    style={{borderRadius: '8px'}}
+    speechToText={{submitAfterSilence: {ms: 3000, stop: false}}}
+  ></DeepChatBrowser>
+</ComponentContainer>
+
+<Tabs>
+<TabItem value="js" label="Sample code">
+
+```html
+<deep-chat speechToText='{"submitAfterSilence": 3000}'></deep-chat>
+```
+
+</TabItem>
+<TabItem value="py" label="Full code">
+
+```html
+<!-- This example is for Vanilla JS and should be tailored to your framework (see Examples) -->
+
+<deep-chat
+  speechToText='{"submitAfterSilence": 3000}'
+  introMessage='{"text": "Click the microphone to start transcribing your speech."}'
+  style="border-radius: 8px"
+  demo="true"
+></deep-chat>
+```
+
+</TabItem>
+</Tabs>
+
+<LineBreak></LineBreak>
+
+:::caution
+When using the default [`Web Speech API`](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API/Using_the_Web_Speech_API) - the recording will
+automatically stop after 5-7 seconds of silence and will ignore _custom_ timeouts that are higher than this.
+:::
+
+<LineBreak></LineBreak>
+
+### `SpeechEvents` {#SpeechEvents}
+
+- Type: \{<br />
+  &nbsp;&nbsp;&nbsp;&nbsp; `onStart?:` `() => void`, <br />
+  &nbsp;&nbsp;&nbsp;&nbsp; `onStop?:` `() => void`, <br />
+  &nbsp;&nbsp;&nbsp;&nbsp; `onResult?:` `(text: string, isFinal: boolean) => void`, <br />
+  &nbsp;&nbsp;&nbsp;&nbsp; `onPreResult?:` `(text: string, isFinal: boolean) => void`, <br />
+  &nbsp;&nbsp;&nbsp;&nbsp; `onCommandModeTrigger?:` `(isStart: boolean) => void`, <br />
+  &nbsp;&nbsp;&nbsp;&nbsp; `onPauseTrigger?:` `(isStart: boolean) => void` <br />
+  \}
+
+This object contains multiple properties that can be attached with functions that will be
+triggered when the corresponding event occurs. <br />
+`onStart` is triggered when speech recording starts. <br />
+`onStop` is triggered when speech recording stops. <br />
+`onResult` is triggered when the latest speech segment is transcribed and inserted into chat's text input. <br />
+`onPreResult` is triggered when the latest speech segment is transcribed and before it is inserted into chat's text input. This is
+particularly useful for executing [commands](#Commands). <br />
+`onCommandModeTrigger` is triggered when command mode is initiated and stopped. <br />
+`onPauseTrigger` is triggered when the pause command is initiated and then stopped via the resume command. <br />
+
+#### Example
+
+<ComponentContainer>
+  <DeepChatBrowser
+    demo={true}
+    introMessage={{
+      text: "Check your browser's developer console to view the results",
+    }}
+    style={{borderRadius: '8px'}}
+    speechToText={{
+      events: {
+        onResult: (text, isFinal) => {
+          console.log(text, isFinal);
+        },
+      },
+    }}
+  ></DeepChatBrowser>
+</ComponentContainer>
+
+<Tabs>
+<TabItem value="js" label="Function">
+
+```js
+chatElementRef.speechToText = {
+  events: {
+    onResult: (text, isFinal) => { console.log(text, isFinal); };
+  }
+}
+```
+
+</TabItem>
+
+</Tabs>
 
 ## Demo
 

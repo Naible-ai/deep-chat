@@ -1,5 +1,5 @@
 import {CameraFilesServiceConfig, FilesServiceConfig, MicrophoneFilesServiceConfig} from './types/fileServiceConfigs';
-import {MessageStyles, MessageContent, OnNewMessage, ErrorMessages, IntroMessage} from './types/messages';
+import {MessageContent, IntroMessage, MessageStyles, UserContent, OnMessage} from './types/messages';
 import {ValidateKeyPropertyView} from './views/validateKeyProperty/validateKeyPropertyView';
 import {WebComponentStyleUtils} from './utils/webComponent/webComponentStyleUtils';
 import {DisableSubmitButton, SubmitButtonStyles} from './types/submitButton';
@@ -9,27 +9,36 @@ import {DirectServiceIO} from './services/utils/directServiceIO';
 import {InsertKeyViewStyles} from './types/insertKeyViewStyles';
 import {InternalHTML} from './utils/webComponent/internalHTML';
 import {InsertKeyView} from './views/insertKey/insertKeyView';
+import {WebModel as WebModelClass} from './webModel/webModel';
 import {ServiceIOFactory} from './services/serviceIOFactory';
 import {ValidationHandler} from './types/validationHandler';
 import {GoogleFont} from './utils/webComponent/googleFont';
 import {DirectConnection} from './types/directConnection';
 import {TextToSpeechConfig} from './types/textToSpeech';
 import {SpeechToTextConfig} from './types/microphone';
+import {RemarkableOptions} from './types/remarkable';
+import {MessageBody} from './types/messagesInternal';
+import {ErrorMessages, OnError} from './types/error';
 import {RequestBodyLimits} from './types/chatLimits';
 import {Property} from './utils/decorators/property';
 import {FireEvents} from './utils/events/fireEvents';
+import {DisplayLoadingBubble} from './types/loading';
 import {ValidateInput} from './types/validateInput';
+import {WebModel} from './types/webModel/webModel';
 import {DropupStyles} from './types/dropupStyles';
+import {CustomButton} from './types/customButton';
 import {HTMLClassUtilities} from './types/html';
 import {ChatView} from './views/chat/chatView';
 import {ServiceIO} from './services/serviceIO';
 import {Legacy} from './utils/legacy/legacy';
 import {TextInput} from './types/textInput';
+import {LoadHistory} from './types/history';
+import {FocusMode} from './types/focusMode';
 import {CustomStyle} from './types/styles';
+import {Response} from './types/response';
 import style from './deepChat.css?inline';
-import {Request} from './types/request';
+import {Connect} from './types/connect';
 import {Avatars} from './types/avatars';
-import {Stream} from './types/stream';
 import {Names} from './types/names';
 import {Demo} from './types/demo';
 
@@ -37,13 +46,13 @@ import {Demo} from './types/demo';
 // TO-DO - perhaps chat bubbles should start at the bottom which would allow nice slide up animation (optional)
 export class DeepChat extends InternalHTML {
   @Property('object')
+  connect?: Connect;
+
+  @Property('object')
   directConnection?: DirectConnection;
 
   @Property('object')
-  request?: Request;
-
-  @Property('object')
-  stream?: Stream;
+  webModel?: WebModel;
 
   @Property('object')
   requestBodyLimits?: RequestBodyLimits;
@@ -56,6 +65,12 @@ export class DeepChat extends InternalHTML {
 
   @Property('function')
   validateInput?: ValidateInput;
+
+  @Property('function')
+  loadHistory?: LoadHistory;
+
+  @Property('object')
+  chatStyle?: CustomStyle;
 
   @Property('object')
   attachmentContainerStyle?: CustomStyle;
@@ -72,14 +87,17 @@ export class DeepChat extends InternalHTML {
   @Property('object')
   submitButtonStyles?: SubmitButtonStyles;
 
+  @Property('object')
+  customButtons?: CustomButton[];
+
   @Property('string')
   auxiliaryStyle?: string;
 
   @Property('array')
-  initialMessages?: MessageContent[];
+  history?: MessageContent[];
 
   @Property('object')
-  introMessage?: IntroMessage;
+  introMessage?: IntroMessage | IntroMessage[];
 
   @Property('object')
   avatars?: Avatars;
@@ -87,8 +105,8 @@ export class DeepChat extends InternalHTML {
   @Property('object')
   names?: Names;
 
-  @Property('boolean')
-  displayLoadingBubble?: boolean;
+  @Property('object')
+  displayLoadingBubble?: DisplayLoadingBubble;
 
   @Property('object')
   errorMessages?: ErrorMessages;
@@ -129,34 +147,48 @@ export class DeepChat extends InternalHTML {
   @Property('object')
   htmlClassUtilities?: HTMLClassUtilities;
 
+  @Property('object')
+  remarkable?: RemarkableOptions;
+
+  @Property('object')
+  focusMode?: FocusMode;
+
   getMessages: () => MessageContent[] = () => [];
 
-  submitUserMessage: (text: string) => void = () =>
+  submitUserMessage: (content: UserContent) => void = () =>
     console.warn('submitUserMessage failed - please wait for chat view to render before calling this property.');
+
+  addMessage: (message: Response, isUpdate?: boolean) => void = () =>
+    console.warn('addMessage failed - please wait for chat view to render before calling this property.');
+
+  updateMessage: (messageBody: MessageBody, index: number) => void = () => {};
+
+  clearMessages: (isReset?: boolean) => void = () => {};
 
   focusInput: () => void = () => FocusUtils.focusFromParentElement(this._elementRef);
 
   refreshMessages: () => void = () => {};
 
-  clearMessages: (isReset?: boolean) => void = () => {};
-
   scrollToBottom: () => void = () => {};
 
   disableSubmitButton: DisableSubmitButton = () => {};
 
-  @Property('function')
-  onNewMessage: OnNewMessage = () => {};
+  setPlaceholderText: (text: string) => void = () => {};
 
   @Property('function')
-  onClearMessages: () => void = () => {};
+  onMessage?: OnMessage;
 
   @Property('function')
-  onComponentRender: () => void = () => {};
+  onClearMessages?: () => void;
+
+  @Property('function')
+  onComponentRender?: (ref: DeepChat) => void;
+
+  @Property('function')
+  onError?: OnError;
 
   @Property('object')
   demo?: Demo;
-
-  _webModel = false;
 
   _hasBeenRendered = false;
 
@@ -174,7 +206,6 @@ export class DeepChat extends InternalHTML {
 
   constructor() {
     super();
-    GoogleFont.appendStyleSheetToHead();
     this._elementRef = document.createElement('div');
     this._elementRef.id = 'container';
     this.attachShadow({mode: 'open'}).appendChild(this._elementRef);
@@ -188,26 +219,26 @@ export class DeepChat extends InternalHTML {
   private readonly _elementRef: HTMLElement;
 
   private changeToChatView() {
-    if (this._activeService) this._activeService.validateConfigKey = false;
+    if (this._activeService) this._activeService.validateKeyProperty = false;
     this.onRender();
   }
 
   // prettier-ignore
   override onRender() {
-    this._activeService ??= ServiceIOFactory.create(this);
-    if (!this._activeService) return;
+    GoogleFont.attemptAppendStyleSheetToHead(this.style);
+    Legacy.processConnect(this);
+    if (!this._activeService || this._activeService.demo) this._activeService = ServiceIOFactory.create(this); 
     if (this.auxiliaryStyle && !this._auxiliaryStyleApplied) {
       WebComponentStyleUtils.apply(this.auxiliaryStyle, this.shadowRoot);
       this._auxiliaryStyleApplied = true;
     }
-    WebComponentStyleUtils.applyDefaultStyleToComponent(this.style);
+    WebComponentStyleUtils.applyDefaultStyleToComponent(this.style, this.chatStyle);
     Legacy.checkForContainerStyles(this, this._elementRef);
-    if (this._activeService.key && this._activeService.validateConfigKey) {
+    if (this._activeService.key && this._activeService.validateKeyProperty) {
       ValidateKeyPropertyView.render(this._elementRef, this.changeToChatView.bind(this), this._activeService);
     } else if (!(this._activeService instanceof DirectServiceIO) || this._activeService.key) {
-      // WORK - potentially refactor to not have to use childElement
       // set before container populated, not available in constructor for react,
-      // assigning to variable as it is added to panel and is no longer child
+      // assigning to variable as it is added to panel and is no longer child (test in official website)
       this._childElement ??= this.children[0] as HTMLElement | undefined;
       ChatView.render(this, this._elementRef, this._activeService, this._childElement);
     } else if (this._activeService instanceof DirectServiceIO) { // when direct service with no key
@@ -216,8 +247,12 @@ export class DeepChat extends InternalHTML {
       // then the chatview would be rendered after it, which causes a blink and is bad UX
       InsertKeyView.render(this._elementRef, this.changeToChatView.bind(this), this._activeService);
     }
+    if (!this._hasBeenRendered) FireEvents.onRender(this);
     this._hasBeenRendered = true;
-    FireEvents.onRender(this);
+  }
+
+  disconnectedCallback() {
+    WebModelClass.chat = undefined;
   }
 }
 

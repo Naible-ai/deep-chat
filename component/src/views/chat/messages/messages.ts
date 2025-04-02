@@ -1,39 +1,34 @@
-import {ProcessedTextToSpeechConfig, TextToSpeech} from './textToSpeech/textToSpeech';
+import {MessageBody, MessageContentI, Overwrite} from '../../../types/messagesInternal';
 import {MessageFile, MessageFileType} from '../../../types/messageFile';
 import {CustomErrors, ServiceIO} from '../../../services/serviceIO';
-import {LoadingMessageDotsStyle} from './loadingMessageDotsStyle';
-import {ElementUtils} from '../../../utils/element/elementUtils';
+import {LoadingStyle} from '../../../utils/loading/loadingStyle';
 import {HTMLDeepChatElements} from './html/htmlDeepChatElements';
-import {MessageContentI} from '../../../types/messagesInternal';
-import {RemarkableConfig} from './remarkable/remarkableConfig';
+import {ElementUtils} from '../../../utils/element/elementUtils';
 import {FireEvents} from '../../../utils/events/fireEvents';
-import {HTMLClassUtilities} from '../../../types/html';
+import {MessageStyleUtils} from './utils/messageStyleUtils';
+import {ErrorMessageOverrides} from '../../../types/error';
+import {ResponseI} from '../../../types/responseInternal';
+import {FileMessageUtils} from './utils/fileMessageUtils';
+import {TextToSpeech} from './textToSpeech/textToSpeech';
+import {LoadingHistory} from './history/loadingHistory';
+import {ErrorResp} from '../../../types/errorInternal';
 import {Demo, DemoResponse} from '../../../types/demo';
-import {MessageStyleUtils} from './messageStyleUtils';
-import {Legacy} from '../../../utils/legacy/legacy';
+import {IntroMessage} from '../../../types/messages';
+import {MessageStream} from './stream/messageStream';
 import {IntroPanel} from '../introPanel/introPanel';
-import {FileMessageUtils} from './fileMessageUtils';
+import {WebModel} from '../../../webModel/webModel';
+import {UpdateMessage} from './utils/updateMessage';
+import {Legacy} from '../../../utils/legacy/legacy';
+import {LoadHistory} from '../../../types/history';
 import {CustomStyle} from '../../../types/styles';
+import {MessageUtils} from './utils/messageUtils';
 import {HTMLMessages} from './html/htmlMessages';
-import {Response} from '../../../types/response';
-import {Avatars} from '../../../types/avatars';
 import {SetupMessages} from './setupMessages';
 import {FileMessages} from './fileMessages';
-import {MessageUtils} from './messageUtils';
+import {MessagesBase} from './messagesBase';
 import {DeepChat} from '../../../deepChat';
 import {HTMLUtils} from './html/htmlUtils';
-import {Names} from '../../../types/names';
-import {Remarkable} from 'remarkable';
-import {AvatarEl} from './avatar';
-import {Name} from './name';
-import {
-  ErrorMessageOverrides,
-  MessageElementsStyles,
-  MessageRoleStyles,
-  MessageContent,
-  MessageStyles,
-  IntroMessage,
-} from '../../../types/messages';
+import {History} from './history/history';
 
 export interface MessageElements {
   outerContainer: HTMLElement;
@@ -41,85 +36,84 @@ export interface MessageElements {
   bubbleElement: HTMLElement;
 }
 
-export class Messages {
-  elementRef: HTMLElement;
-  readonly messageStyles?: MessageStyles;
-  private _messageElementRefs: MessageElements[] = [];
-  private readonly _avatars?: Avatars;
-  private readonly _names?: Names;
+// WORK - change setUp to setup
+export class Messages extends MessagesBase {
   private readonly _errorMessageOverrides?: ErrorMessageOverrides;
-  private readonly _onNewMessage?: (message: MessageContentI, isInitial: boolean) => void;
   private readonly _onClearMessages?: () => void;
-  private readonly _displayLoadingMessage?: boolean;
+  private readonly _onError?: (error: string) => void;
+  private readonly _isLoadingMessageAllowed?: boolean;
   private readonly _permittedErrorPrefixes?: CustomErrors;
   private readonly _displayServiceErrorMessages?: boolean;
-  private readonly _textElementsToText: [MessageElements, string][] = [];
-  private _remarkable: Remarkable;
-  private _textToSpeech?: ProcessedTextToSpeechConfig;
-  private _introPanel?: IntroPanel;
-  private _introMessage?: IntroMessage;
-  private _streamedText = '';
-  readonly htmlClassUtilities: HTMLClassUtilities = {};
-  messages: MessageContentI[] = [];
+  private _introMessage?: IntroMessage | IntroMessage[];
   customDemoResponse?: DemoResponse;
-  submitUserMessage?: (text: string) => void;
 
   constructor(deepChat: DeepChat, serviceIO: ServiceIO, panel?: HTMLElement) {
+    super(deepChat);
     const {permittedErrorPrefixes, introPanelMarkUp, demo} = serviceIO;
-    this._remarkable = RemarkableConfig.createNew();
-    this.elementRef = Messages.createContainerElement();
-    this.messageStyles = deepChat.messageStyles;
-    this._avatars = deepChat.avatars;
-    this._names = deepChat.names;
     this._errorMessageOverrides = deepChat.errorMessages?.overrides;
-    if (deepChat.htmlClassUtilities) this.htmlClassUtilities = deepChat.htmlClassUtilities;
-    this._onNewMessage = FireEvents.onNewMessage.bind(this, deepChat);
     this._onClearMessages = FireEvents.onClearMessages.bind(this, deepChat);
-    this._displayLoadingMessage = Messages.getDisplayLoadingMessage(deepChat, serviceIO);
+    this._onError = FireEvents.onError.bind(this, deepChat);
+    this._isLoadingMessageAllowed = Messages.getDefaultDisplayLoadingMessage(deepChat, serviceIO);
+    if (typeof deepChat.displayLoadingBubble === 'object' && !!deepChat.displayLoadingBubble.toggle) {
+      deepChat.displayLoadingBubble.toggle = this.setLoadingToggle.bind(this);
+    }
     this._permittedErrorPrefixes = permittedErrorPrefixes;
-    this.addSetupMessageIfNeeded(deepChat, serviceIO);
-    this.populateIntroPanel(panel, introPanelMarkUp, deepChat.introPanelStyle);
-    if (deepChat.introMessage) this.addIntroductoryMessage(deepChat.introMessage);
-    if (deepChat.initialMessages) this.populateInitialMessages(deepChat.initialMessages);
+    if (!this.addSetupMessageIfNeeded(deepChat, serviceIO)) {
+      this.populateIntroPanel(panel, introPanelMarkUp, deepChat.introPanelStyle);
+    }
+    if (demo) this.prepareDemo(Legacy.processDemo(demo), deepChat.loadHistory); // before intro/history for loading spinner
+    this.addIntroductoryMessages(deepChat, serviceIO);
+    new History(deepChat, this, serviceIO);
     this._displayServiceErrorMessages = deepChat.errorMessages?.displayServiceErrorMessages;
-    deepChat.getMessages = () => JSON.parse(JSON.stringify(this.messages));
+    deepChat.getMessages = () => JSON.parse(JSON.stringify(this.messageToElements.map(([msg]) => msg)));
     deepChat.clearMessages = this.clearMessages.bind(this, serviceIO);
-    deepChat.refreshMessages = this.refreshTextMessages.bind(this);
-    deepChat.scrollToBottom = this.scrollToBottom.bind(this);
-    if (demo) this.prepareDemo(demo);
+    deepChat.refreshMessages = this.refreshTextMessages.bind(this, deepChat.remarkable);
+    deepChat.scrollToBottom = ElementUtils.scrollToBottom.bind(this, this.elementRef);
+    deepChat.addMessage = (message: ResponseI, isUpdate?: boolean) => {
+      this.addAnyMessage({...message, sendUpdate: !!isUpdate}, !isUpdate);
+    };
+    deepChat.updateMessage = (messageBody: MessageBody, index: number) => UpdateMessage.update(this, messageBody, index);
+    if (serviceIO.isWebModel()) (serviceIO as WebModel).setUpMessages(this);
     if (deepChat.textToSpeech) {
       TextToSpeech.processConfig(deepChat.textToSpeech, (processedConfig) => {
-        this._textToSpeech = processedConfig;
+        this.textToSpeech = processedConfig;
       });
     }
-    setTimeout(() => {
-      this.submitUserMessage = deepChat.submitUserMessage; // wait for it to be available
-    });
   }
 
-  private static getDisplayLoadingMessage(deepChat: DeepChat, serviceIO: ServiceIO) {
-    if (serviceIO.websocket) return false;
-    return deepChat.displayLoadingBubble ?? true;
+  private static getDefaultDisplayLoadingMessage(deepChat: DeepChat, serviceIO: ServiceIO) {
+    // if displayLoadingBubble is {} then treat it as true.
+    if (serviceIO.websocket) {
+      return !!deepChat.displayLoadingBubble;
+    }
+    return (typeof deepChat.displayLoadingBubble === 'object' || deepChat.displayLoadingBubble) ?? true;
   }
 
-  private prepareDemo(demo: Demo) {
+  private setLoadingToggle() {
+    const lastMessageEls = this.messageElementRefs[this.messageElementRefs.length - 1];
+    if (MessagesBase.isLoadingMessage(lastMessageEls)) {
+      this.removeLastMessage();
+    } else {
+      this.addLoadingMessage(true);
+    }
+  }
+
+  private prepareDemo(demo: Demo, loadHistory?: LoadHistory): void {
     if (typeof demo === 'object') {
-      if (demo.response) this.customDemoResponse = demo.response;
+      if (!loadHistory && demo.displayLoading) {
+        const {history} = demo.displayLoading;
+        if (history?.small) LoadingHistory.addMessage(this, false);
+        if (history?.full) LoadingHistory.addMessage(this);
+      }
       if (demo.displayErrors) {
         if (demo.displayErrors.default) this.addNewErrorMessage('' as 'service', '');
         if (demo.displayErrors.service) this.addNewErrorMessage('service', '');
         if (demo.displayErrors.speechToText) this.addNewErrorMessage('speechToText', '');
       }
-      if (demo.displayLoadingBubble) {
-        this.addLoadingMessage();
-      }
+      // needs to be here for message loading bubble to not disappear after error
+      if (demo.displayLoading?.message) this.addLoadingMessage();
+      if (demo.response) this.customDemoResponse = demo.response;
     }
-  }
-
-  private static createContainerElement() {
-    const container = document.createElement('div');
-    container.id = 'messages';
-    return container;
   }
 
   private addSetupMessageIfNeeded(deepChat: DeepChat, serviceIO: ServiceIO) {
@@ -128,172 +122,140 @@ export class Messages {
       const elements = this.createAndAppendNewMessageElement(text, MessageUtils.AI_ROLE);
       this.applyCustomStyles(elements, MessageUtils.AI_ROLE, false);
     }
+    return !!text;
   }
 
-  private addIntroductoryMessage(introMessage?: IntroMessage) {
-    if (introMessage) this._introMessage = introMessage;
-    if (this._introMessage?.text) {
-      const elements = this.createAndAppendNewMessageElement(this._introMessage.text, MessageUtils.AI_ROLE);
+  // WORK - const file for deep chat classes
+  private addIntroductoryMessages(deepChat?: DeepChat, serviceIO?: ServiceIO) {
+    if (deepChat?.shadowRoot) this._introMessage = deepChat.introMessage;
+    let introMessage = this._introMessage;
+    if (serviceIO?.isWebModel()) introMessage ??= (serviceIO as WebModel).getIntroMessage(introMessage);
+    const shouldHide = !deepChat?.history && !!(deepChat?.loadHistory || serviceIO?.fetchHistory);
+    if (introMessage) {
+      if (Array.isArray(introMessage)) {
+        introMessage.forEach((intro, index) => {
+          if (index !== 0) {
+            const innerContainer = this.messageElementRefs[this.messageElementRefs.length - 1].innerContainer;
+            MessageUtils.hideRoleElements(innerContainer, this.avatar, this.name);
+          }
+          this.addIntroductoryMessage(intro, shouldHide);
+        });
+      } else {
+        this.addIntroductoryMessage(introMessage, shouldHide);
+      }
+    }
+  }
+
+  private addIntroductoryMessage(introMessage: IntroMessage, shouldHide: boolean) {
+    let elements;
+    if (introMessage?.text) {
+      elements = this.createAndAppendNewMessageElement(introMessage.text, MessageUtils.AI_ROLE);
+    } else if (introMessage?.html) {
+      elements = HTMLMessages.add(this, introMessage.html, MessageUtils.AI_ROLE);
+    }
+    if (elements) {
       this.applyCustomStyles(elements, MessageUtils.AI_ROLE, false, this.messageStyles?.intro);
-    } else if (this._introMessage?.html) {
-      const elements = HTMLMessages.add(this, this._introMessage.html, MessageUtils.AI_ROLE, this._messageElementRefs);
-      this.applyCustomStyles(elements, MessageUtils.AI_ROLE, false, this.messageStyles?.intro);
+      elements.outerContainer.classList.add(MessagesBase.INTRO_CLASS);
+      if (shouldHide) elements.outerContainer.style.display = 'none';
+    }
+    return elements;
+  }
+
+  public removeIntroductoryMessage() {
+    const introMessage = this.messageElementRefs[0];
+    if (introMessage.outerContainer.classList.contains(MessagesBase.INTRO_CLASS)) {
+      introMessage.outerContainer.remove();
+      this.messageElementRefs.shift();
     }
   }
 
-  private populateInitialMessages(initialMessages: MessageContent[]) {
-    initialMessages.forEach((message) => {
-      Legacy.processInitialMessageFile(message);
-      this.addNewMessage(message, true);
-    });
-    // still not enough for when font file is downloaded later as text size changes, hence need to scroll programmatically
-    setTimeout(() => this.scrollToBottom());
+  public addAnyMessage(message: ResponseI, isHistory = false, isTop = false) {
+    if (message.error) {
+      return this.addNewErrorMessage('service', message.error, isTop);
+    }
+    return this.addNewMessage(message, isHistory, isTop);
   }
 
-  // prettier-ignore
-  public applyCustomStyles(elements: MessageElements | undefined, role: string, media: boolean,
-      otherStyles?: MessageRoleStyles | MessageElementsStyles) {
-    if (elements && this.messageStyles) {
-      MessageStyleUtils.applyCustomStyles(this.messageStyles, elements, role, media, otherStyles);
+  private tryAddTextMessage(msg: MessageContentI, overwrite: Overwrite, data: ResponseI, history = false, isTop = false) {
+    if (!data.ignoreText && msg.text !== undefined && data.text !== null) {
+      this.addNewTextMessage(msg.text, msg.role, overwrite, isTop);
+      if (!history && this.textToSpeech && msg.role !== MessageUtils.USER_ROLE) {
+        TextToSpeech.speak(msg.text, this.textToSpeech);
+      }
     }
   }
 
-  // prettier-ignore
-  private addInnerContainerElements(bubbleElement: HTMLElement, text: string, role: string) {
-    bubbleElement.classList.add('message-bubble',
-      role === MessageUtils.USER_ROLE ? 'user-message-text' : 'ai-message-text');
-    bubbleElement.innerHTML = this._remarkable.render(text);
-    // there is a bug in remarkable where text with only numbers and full stop after them causes the creation
-    // of a list which has no innert text and is instead prepended as a prefix in the start attribute (12.)
-    if (bubbleElement.innerText.trim().length === 0) bubbleElement.innerText = text;
-    if (this._avatars) AvatarEl.add(bubbleElement, role, this._avatars);
-    if (this._names) Name.add(bubbleElement, role, this._names);
-    return {bubbleElement};
-  }
-
-  private static processMessageContent(content: Response): MessageContentI {
-    if (!content.text && !content.files && !content.html) content.text = '';
-    content.role ??= MessageUtils.AI_ROLE;
-    return content as MessageContentI;
-  }
-
-  private static createBaseElements(): MessageElements {
-    const outerContainer = document.createElement('div');
-    const innerContainer = document.createElement('div');
-    innerContainer.classList.add('inner-message-container');
-    outerContainer.appendChild(innerContainer);
-    outerContainer.classList.add('outer-message-container');
-    const bubbleElement = document.createElement('div');
-    bubbleElement.classList.add('message-bubble');
-    innerContainer.appendChild(bubbleElement);
-    return {outerContainer, innerContainer, bubbleElement};
-  }
-
-  private createMessageElements(text: string, role: string) {
-    const messageElements = Messages.createBaseElements();
-    const {outerContainer, innerContainer, bubbleElement} = messageElements;
-    outerContainer.appendChild(innerContainer);
-    this.addInnerContainerElements(bubbleElement, text, role);
-    this._messageElementRefs.push(messageElements);
-    return messageElements;
-  }
-
-  private static isTemporaryElement(elements: MessageElements) {
-    return (
-      elements?.bubbleElement.classList.contains('loading-message-text') ||
-      HTMLDeepChatElements.isElementTemporary(elements)
-    );
-  }
-
-  public createNewMessageElement(text: string, role: string) {
-    this._introPanel?.hide();
-    const lastMessageElements = this._messageElementRefs[this._messageElementRefs.length - 1];
-    if (Messages.isTemporaryElement(lastMessageElements)) {
-      lastMessageElements.outerContainer.remove();
-      this._messageElementRefs.pop();
+  private tryAddFileMessages(message: MessageContentI, isTop = false) {
+    if (message.files && Array.isArray(message.files)) {
+      FileMessages.addMessages(this, message.files, message.role, isTop);
     }
-    return this.createMessageElements(text, role);
   }
 
-  private createAndAppendNewMessageElement(text: string, role: string) {
-    const messageElements = this.createNewMessageElement(text, role);
-    this.elementRef.appendChild(messageElements.outerContainer);
-    setTimeout(() => this.scrollToBottom()); // timeout neeed when bubble font is large
-    return messageElements;
-  }
-
-  // makes sure the bubble has dimensions when there is no text
-  public static editEmptyMessageElement(bubbleElement: HTMLElement) {
-    bubbleElement.textContent = '.';
-    bubbleElement.style.color = '#00000000';
-  }
-
-  private addNewTextMessage(text: string, role: string) {
-    const messageElements = this.createAndAppendNewMessageElement(text, role);
-    this.applyCustomStyles(messageElements, role, false);
-    if (text.trim().length === 0) Messages.editEmptyMessageElement(messageElements.bubbleElement);
-    this._textElementsToText.push([messageElements, text]);
-    return messageElements;
+  private tryAddHTMLMessage(message: MessageContentI, overwrite: Overwrite, isTop = false) {
+    if (message.html !== undefined && message.html !== null) {
+      const elements = HTMLMessages.add(this, message.html, message.role, overwrite, isTop);
+      if (isTop && HTMLDeepChatElements.isElementTemporary(elements)) delete message.html;
+    }
   }
 
   // this should not be activated by streamed messages
-  public addNewMessage(data: Response, isInitial = false) {
-    let isNewMessage = true;
-    const message = Messages.processMessageContent(data);
-    if (message.text !== undefined && data.text !== null) {
-      this.addNewTextMessage(message.text, message.role);
-      if (!isInitial && this._textToSpeech && message.role !== MessageUtils.USER_ROLE) {
-        TextToSpeech.speak(message.text, this._textToSpeech);
-      }
+  public addNewMessage(data: ResponseI, isHistory = false, isTop = false) {
+    const message = Messages.createMessageContent(data);
+    const overwrite: Overwrite = {status: data.overwrite}; // if did not overwrite, create a new message
+    if (isTop) {
+      this.tryAddHTMLMessage(message, overwrite, isTop);
+      this.tryAddFileMessages(message, isTop);
+      this.tryAddTextMessage(message, overwrite, data, isHistory, isTop);
+    } else {
+      this.tryAddTextMessage(message, overwrite, data, isHistory, isTop);
+      this.tryAddFileMessages(message, isTop);
+      this.tryAddHTMLMessage(message, overwrite, isTop);
     }
-    if (message.files && Array.isArray(message.files)) {
-      FileMessages.addMessages(this, message.files, message.role);
+    if (this.isValidMessageContent(message) && !isTop) {
+      this.updateStateOnMessage(message, data.overwrite, data.sendUpdate, isHistory);
     }
-    if (message.html !== undefined && message.html !== null) {
-      const elements = HTMLMessages.add(this, message.html, message.role, this._messageElementRefs);
-      if (HTMLDeepChatElements.isElementTemporary(elements)) delete message.html;
-      isNewMessage = !!elements;
-    }
-    this.updateStateOnMessage(message, isNewMessage, isInitial);
+    return message;
   }
 
-  private updateStateOnMessage(messageContent: MessageContentI, isNewMessage: boolean, isInitial = false) {
-    if (isNewMessage) this.messages.push(messageContent);
-    this.sendClientUpdate(messageContent, isInitial);
+  private isValidMessageContent(messageContent: MessageContentI) {
+    return messageContent.text || messageContent.html || (messageContent.files && messageContent.files.length > 0);
   }
 
-  private sendClientUpdate(message: MessageContentI, isInitial = false) {
-    this._onNewMessage?.(JSON.parse(JSON.stringify(message)), isInitial);
+  private updateStateOnMessage(messageContent: MessageContentI, overwritten?: boolean, update = true, isHistory = false) {
+    if (!overwritten) {
+      const messageBody = MessageUtils.generateMessageBody(messageContent, this.messageElementRefs);
+      this.messageToElements.push([messageContent, messageBody]);
+    }
+    if (update) this.sendClientUpdate(messageContent, isHistory);
   }
 
   // prettier-ignore
   private removeMessageOnError() {
-    const lastMessage = this._messageElementRefs[this._messageElementRefs.length - 1];
+    const lastMessage = this.messageElementRefs[this.messageElementRefs.length - 1];
     const lastMessageBubble = lastMessage?.bubbleElement;
-    if ((lastMessageBubble?.classList.contains('streamed-message') && lastMessageBubble.textContent === '') ||
+    if ((lastMessageBubble?.classList.contains(MessageStream.MESSAGE_CLASS) && lastMessageBubble.textContent === '') ||
         Messages.isTemporaryElement(lastMessage)) {
-      lastMessage.outerContainer.remove();
-      this._messageElementRefs.pop();
+      this.removeLastMessage();
     }
   }
 
   // prettier-ignore
-  public addNewErrorMessage(type: keyof Omit<ErrorMessageOverrides, 'default'>, message?: string) {
+  public addNewErrorMessage(type: keyof Omit<ErrorMessageOverrides, 'default'>, message?: ErrorResp, isTop = false) {
     this.removeMessageOnError();
-    const messageElements = Messages.createBaseElements();
-    const {outerContainer, bubbleElement} = messageElements;
-    bubbleElement.classList.add('error-message-text');
     const text = this.getPermittedMessage(message) || this._errorMessageOverrides?.[type]
       || this._errorMessageOverrides?.default || 'Error, please try again.';
-    bubbleElement.innerHTML = text;
+    const messageElements = this.createMessageElementsOnOrientation(text, 'error', isTop);
+    MessageUtils.hideRoleElements(messageElements.innerContainer, this.avatar, this.name);
+    const {bubbleElement, outerContainer} = messageElements;
+    bubbleElement.classList.add(MessageUtils.ERROR_MESSAGE_TEXT_CLASS);
+    this.renderText(bubbleElement, text);
     const fontElementStyles = MessageStyleUtils.extractParticularSharedStyles(['fontSize', 'fontFamily'],
       this.messageStyles?.default);
     MessageStyleUtils.applyCustomStylesToElements(messageElements, false, fontElementStyles);
     MessageStyleUtils.applyCustomStylesToElements(messageElements, false, this.messageStyles?.error);
-    this.elementRef.appendChild(outerContainer);
-    this.scrollToBottom();
-    if (this._textToSpeech) TextToSpeech.speak(text, this._textToSpeech);
-    this._streamedText = '';
+    if (!isTop) this.appendOuterContainerElemet(outerContainer);
+    if (this.textToSpeech) TextToSpeech.speak(text, this.textToSpeech);
+    this._onError?.(text);
   }
 
   private static checkPermittedErrorPrefixes(errorPrefixes: string[], message: string): string | undefined {
@@ -303,82 +265,65 @@ export class Messages {
     return undefined;
   }
 
-  private getPermittedMessage(message?: string) {
+  private static extractErrorMessages(message: ErrorResp): string[] {
+    if (Array.isArray(message)) {
+      return message;
+    }
+    if (message instanceof Error) {
+      return [message.message];
+    }
+    if (typeof message === 'string') {
+      return [message];
+    }
+    if (typeof message === 'object' && message.error) {
+      return [message.error];
+    }
+    return [];
+  }
+
+  private getPermittedMessage(message?: ErrorResp): string | undefined {
     if (message) {
-      if (this._displayServiceErrorMessages) return message;
-      if (typeof message === 'string' && this._permittedErrorPrefixes) {
-        const result = Messages.checkPermittedErrorPrefixes(this._permittedErrorPrefixes, message);
-        if (result) return result;
-      } else if (Array.isArray(message) && this._permittedErrorPrefixes) {
-        for (let i = 0; i < message.length; i += 1) {
-          const result = Messages.checkPermittedErrorPrefixes(this._permittedErrorPrefixes, message[i]);
-          if (result) return result;
+      const messages = Messages.extractErrorMessages(message); // turning all into array for convenience
+      for (let i = 0; i < messages.length; i += 1) {
+        const messageStr = messages[i];
+        if (typeof messageStr === 'string') {
+          if (this._displayServiceErrorMessages) return messageStr;
+          if (this._permittedErrorPrefixes) {
+            const result = Messages.checkPermittedErrorPrefixes(this._permittedErrorPrefixes, messageStr);
+            if (result) return result;
+          }
         }
       }
     }
     return undefined;
   }
 
-  private getLastMessageElement() {
-    return this.elementRef.children[this.elementRef.children.length - 1];
-  }
-
-  private getLastMessageBubbleElement() {
-    return Array.from(this.getLastMessageElement()?.children?.[0]?.children || []).find((element) => {
-      return element.classList.contains('message-bubble');
-    });
-  }
-
-  public isLastMessageError() {
-    return this.getLastMessageBubbleElement()?.classList.contains('error-message-text');
-  }
-
   public removeError() {
-    if (this.isLastMessageError()) this.getLastMessageElement().remove();
+    if (this.isLastMessageError()) MessageUtils.getLastMessageElement(this.elementRef).remove();
   }
 
-  public addLoadingMessage() {
-    if (!this._displayLoadingMessage) return;
+  private addDefaultLoadingMessage() {
     const messageElements = this.createMessageElements('', MessageUtils.AI_ROLE);
-    const {outerContainer, bubbleElement} = messageElements;
-    bubbleElement.classList.add('loading-message-text');
+    const {bubbleElement} = messageElements;
+    messageElements.bubbleElement.classList.add(LoadingStyle.DOTS_CONTAINER_CLASS);
     const dotsElement = document.createElement('div');
-    dotsElement.classList.add('dots-flashing');
+    dotsElement.classList.add('loading-message-dots');
     bubbleElement.appendChild(dotsElement);
-    this.applyCustomStyles(messageElements, MessageUtils.AI_ROLE, false, this.messageStyles?.loading);
-    LoadingMessageDotsStyle.set(bubbleElement, this.messageStyles);
-    this.elementRef.appendChild(outerContainer);
-    this.scrollToBottom();
+    LoadingStyle.setDots(bubbleElement, this.messageStyles);
+    return messageElements;
   }
 
-  public addNewStreamedMessage(role?: string) {
-    const {bubbleElement} = this.addNewTextMessage('', role || MessageUtils.AI_ROLE);
-    const messageContent = Messages.processMessageContent({text: ''});
-    this.messages.push(messageContent);
-    bubbleElement.classList.add('streamed-message');
-    this.scrollToBottom(); // need to scroll down completely
-    return bubbleElement;
-  }
-
-  public updateStreamedMessage(text: string, bubbleElement: HTMLElement) {
-    const isScrollbarAtBottomOfElement = ElementUtils.isScrollbarAtBottomOfElement(this.elementRef);
-    if (text.trim().length !== 0) {
-      const defaultColor = this.messageStyles?.default;
-      bubbleElement.style.color = defaultColor?.ai?.bubble?.color || defaultColor?.shared?.bubble?.color || '';
-    }
-    this._streamedText += text;
-    this._textElementsToText[this._textElementsToText.length - 1][1] = this._streamedText;
-    bubbleElement.innerHTML = this._remarkable.render(this._streamedText);
-    if (isScrollbarAtBottomOfElement) this.scrollToBottom();
-  }
-
-  public finaliseStreamedMessage() {
-    if (!this.getLastMessageBubbleElement()?.classList.contains('streamed-message')) return;
-    this._textElementsToText[this._textElementsToText.length - 1][1] = this._streamedText;
-    this.messages[this.messages.length - 1].text = this._streamedText;
-    this.sendClientUpdate(Messages.processMessageContent({text: this._streamedText}), false);
-    if (this._textToSpeech) TextToSpeech.speak(this._streamedText, this._textToSpeech);
-    this._streamedText = '';
+  public addLoadingMessage(override = false) {
+    const lastMessageEls = this.messageElementRefs[this.messageElementRefs.length - 1];
+    if (MessagesBase.isLoadingMessage(lastMessageEls) || (!override && !this._isLoadingMessageAllowed)) return;
+    const html = this.messageStyles?.loading?.message?.html;
+    const messageElements = html
+      ? HTMLMessages.createElements(this, html, MessageUtils.AI_ROLE, false)
+      : this.addDefaultLoadingMessage();
+    this.appendOuterContainerElemet(messageElements.outerContainer);
+    messageElements.bubbleElement.classList.add(LoadingStyle.BUBBLE_CLASS);
+    this.applyCustomStyles(messageElements, MessageUtils.AI_ROLE, false, this.messageStyles?.loading?.message?.styles);
+    if (!this.focusMode) ElementUtils.scrollToBottom(this.elementRef);
   }
 
   private populateIntroPanel(childElement?: HTMLElement, introPanelMarkUp?: string, introPanelStyle?: CustomStyle) {
@@ -397,12 +342,12 @@ export class Messages {
         return new Promise((resolve) => {
           if (!fileData.type || fileData.type === 'any') {
             const fileName = fileData.file.name || FileMessageUtils.DEFAULT_FILE_NAME;
-            resolve({name: fileName, type: 'any'});
+            resolve({name: fileName, type: 'any', ref: fileData.file});
           } else {
             const reader = new FileReader();
             reader.readAsDataURL(fileData.file);
             reader.onload = () => {
-              resolve({src: reader.result as string, type: fileData.type});
+              resolve({src: reader.result as string, type: fileData.type, ref: fileData.file});
             };
           }
         });
@@ -410,45 +355,47 @@ export class Messages {
     );
   }
 
+  public static isActiveElement(bubbleClasslist?: DOMTokenList) {
+    if (!bubbleClasslist) return false;
+    return (
+      bubbleClasslist.contains(LoadingStyle.BUBBLE_CLASS) ||
+      bubbleClasslist.contains(LoadingHistory.CLASS) ||
+      bubbleClasslist.contains(MessageStream.MESSAGE_CLASS)
+    );
+  }
+
   // WORK - update all message classes to use deep-chat prefix
   private clearMessages(serviceIO: ServiceIO, isReset?: boolean) {
     const retainedElements: MessageElements[] = [];
-    this._messageElementRefs.forEach((message) => {
-      const bubbleClasslist = message.bubbleElement.classList;
-      if (bubbleClasslist.contains('loading-message-text') || bubbleClasslist.contains('streamed-message')) {
+    this.messageElementRefs.forEach((message) => {
+      if (Messages.isActiveElement(message.bubbleElement.classList)) {
         retainedElements.push(message);
       } else {
         message.outerContainer.remove();
       }
     });
-    // this is a form of cleanup as this._messageElementRefs does not contain error messages
+    // this is a form of cleanup as this.messageElementRefs does not contain error messages
     // and can only be deleted by direct search
     Array.from(this.elementRef.children).forEach((messageElement) => {
       const bubbleClasslist = messageElement.children[0]?.children[0];
-      if (bubbleClasslist?.classList.contains('error-message-text')) {
+      if (bubbleClasslist?.classList.contains(MessageUtils.ERROR_MESSAGE_TEXT_CLASS)) {
         messageElement.remove();
       }
     });
-    this._messageElementRefs = retainedElements;
+    this.messageElementRefs = retainedElements;
+    const retainedMessageToElements = this.messageToElements.filter((msgToEls) => {
+      // safe because streamed messages can't contain multiple props (text, html)
+      return (
+        (msgToEls[1].text && Messages.isActiveElement(msgToEls[1].text.bubbleElement.classList)) ||
+        (msgToEls[1].html && Messages.isActiveElement(msgToEls[1].html.bubbleElement.classList))
+      );
+    });
+    this.messageToElements.splice(0, this.messageToElements.length, ...retainedMessageToElements);
     if (isReset !== false) {
       if (this._introPanel?._elementRef) this._introPanel.display();
-      this.addIntroductoryMessage();
+      this.addIntroductoryMessages();
     }
-    this.messages.splice(0, this.messages.length);
-    this._textElementsToText.splice(0, this._textElementsToText.length);
     this._onClearMessages?.();
     delete serviceIO.sessionId;
-  }
-
-  private scrollToBottom() {
-    this.elementRef.scrollTop = this.elementRef.scrollHeight;
-  }
-
-  // this is mostly used for enabling highlight.js to highlight code if it downloads later
-  private refreshTextMessages() {
-    this._remarkable = RemarkableConfig.createNew();
-    this._textElementsToText.forEach((elementToText) => {
-      elementToText[0].bubbleElement.innerHTML = this._remarkable.render(elementToText[1]);
-    });
   }
 }

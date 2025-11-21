@@ -5,6 +5,8 @@ import {ErrorUtils} from './utils/errorUtils';
 import {Custom} from './services/custom';
 import {OpenAI} from './services/openAI';
 import {Cohere} from './services/cohere';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import multer from 'multer';
 import cors from 'cors';
@@ -13,16 +15,73 @@ import cors from 'cors';
 
 dotenv.config();
 
-// this is used for parsing FormData
-const upload = multer();
-
 const app: Express = express();
 const port = 8080;
 
-// this will need to be reconfigured before taking the app to production
-app.use(cors());
+// ------------------ SECURITY MIDDLEWARE ------------------
 
-app.use(express.json());
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
+
+// CORS configuration - restrict to specific origins in production
+const corsOptions = {
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
+  methods: ['POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400, // 24 hours
+};
+app.use(cors(corsOptions));
+
+// Rate limiting - prevent abuse
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
+
+// Body parser with size limits
+app.use(express.json({limit: '10mb'}));
+app.use(express.urlencoded({extended: true, limit: '10mb'}));
+
+// File upload configuration with limits and validation
+const upload = multer({
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max file size
+    files: 5, // Maximum 5 files per request
+  },
+  fileFilter: (req, file, cb) => {
+    // Whitelist allowed MIME types
+    const allowedMimes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'audio/mpeg',
+      'audio/wav',
+      'audio/ogg',
+      'application/pdf',
+    ];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only images, audio, and PDF files are allowed.'));
+    }
+  },
+});
 
 // ------------------ CUSTOM API ------------------
 
